@@ -7,17 +7,90 @@
     "vscode": "^1.60.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Formatters"
   ],
-  "activationEvents": [],
+  "keywords": [
+    "markdown",
+    "diff",
+    "preview",
+    "git"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "markdown-preview-diff.helloWorld",
-        "title": "Hello World"
+        "command": "markdown.openPreviewDiff",
+        "title": "Markdown: Open Preview Diff"
+      },
+      {
+        "command": "markdown.previewDiff.nextChange",
+        "title": "Markdown: Next Change"
+      },
+      {
+        "command": "markdown.previewDiff.prevChange",
+        "title": "Markdown: Previous Change"
       }
-    ]
+    ],
+    "keybindings": [
+      {
+        "command": "markdown.openPreviewDiff",
+        "key": "ctrl+k d",
+        "mac": "cmd+k d",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "markdown.previewDiff.nextChange",
+        "key": "f8"
+      },
+      {
+        "command": "markdown.previewDiff.prevChange",
+        "key": "shift+f8"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "markdown.openPreviewDiff",
+          "when": "editorLangId == markdown",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Markdown Preview Diff",
+      "properties": {
+        "markdownPreviewDiff.defaultComparisonTarget": {
+          "type": "string",
+          "enum": [
+            "HEAD",
+            "staged"
+          ],
+          "default": "HEAD",
+          "description": "Determines what version to compare working changes against. 'HEAD' compares against the last commit, 'staged' compares against staged changes."
+        },
+        "markdownPreviewDiff.syncScroll": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable synchronized scrolling between the before and after panes in the preview diff."
+        },
+        "markdownPreviewDiff.highlightStyle": {
+          "type": "string",
+          "default": "default",
+          "description": "Color scheme for diff highlighting in the preview."
+        },
+        "markdownPreviewDiff.renderTimeout": {
+          "type": "number",
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 1000,
+          "description": "Maximum time in milliseconds to wait for markdown rendering before timeout. Prevents hanging on very large files."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
