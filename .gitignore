@@ -1,0 +1,11 @@
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+
+# BMAD development workflow files (internal tooling only)
+.bmad/
+
+# Claude Code assistant files (internal tooling only)
+.claude/
