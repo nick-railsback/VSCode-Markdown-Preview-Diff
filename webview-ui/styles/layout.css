@@ -1,0 +1,106 @@
+/* Layout styles for side-by-side diff view */
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+}
+
+/* Loading Indicator */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+}
+
+.spinner {
+  border: 4px solid rgba(128, 128, 128, 0.2);
+  border-left-color: var(--vscode-progressBar-background);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-indicator p {
+  color: var(--vscode-descriptionForeground);
+  font-size: 14px;
+}
+
+/* Diff Container */
+.diff-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Pane Styles */
+.pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0; /* Allow flexbox shrinking */
+}
+
+.pane-header {
+  background-color: var(--vscode-sideBarSectionHeader-background);
+  color: var(--vscode-sideBarSectionHeader-foreground);
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  flex-shrink: 0;
+}
+
+.pane-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 16px;
+  background-color: var(--vscode-editor-background);
+}
+
+/* Before/After Pane Differentiation */
+.pane-before {
+  border-right: 1px solid var(--vscode-panel-border);
+}
+
+.pane-before .pane-header {
+  background-color: var(--vscode-diffEditor-removedTextBackground, rgba(255, 0, 0, 0.1));
+}
+
+.pane-after .pane-header {
+  background-color: var(--vscode-diffEditor-insertedTextBackground, rgba(0, 255, 0, 0.1));
+}
+
+/* Scrollbar Styling */
+.pane-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.pane-content::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.pane-content::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 5px;
+}
+
+.pane-content::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
