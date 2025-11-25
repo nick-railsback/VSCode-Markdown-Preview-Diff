@@ -7,9 +7,9 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('markdown-preview-diff extension is now active');
 
 	try {
-		// Register commands
+		// Register commands with context binding (Task 9)
 		const disposables = [
-			vscode.commands.registerCommand('markdown.openPreviewDiff', openPreviewDiff),
+			vscode.commands.registerCommand('markdown.openPreviewDiff', () => openPreviewDiff(context)),
 			vscode.commands.registerCommand('markdown.previewDiff.nextChange', nextChange),
 			vscode.commands.registerCommand('markdown.previewDiff.prevChange', prevChange)
 		];

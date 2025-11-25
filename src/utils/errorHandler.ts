@@ -133,6 +133,21 @@ export function logDebug(message: string): void {
 }
 
 /**
+ * Logs error message to output channel with stack trace
+ *
+ * @param message - Error context message
+ * @param error - Error object
+ */
+export function logError(message: string, error: Error): void {
+	const channel = getOutputChannel();
+	channel.appendLine(`[ERROR] ${new Date().toISOString()} - ${message}`);
+	channel.appendLine(`Error: ${error.message}`);
+	if (error.stack) {
+		channel.appendLine(`Stack: ${error.stack}`);
+	}
+}
+
+/**
  * Disposes error handler resources
  *
  * Call this when extension is deactivated.

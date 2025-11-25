@@ -1,6 +1,8 @@
-# Test Markdown File
+# Test Markdown File - UPDATED
 
 This is a test file for Story 2.5 manual testing.
+
+**NEW CONTENT:** This line was added to test the diff functionality!
 
 ## Features to Test
 
@@ -19,10 +21,11 @@ function hello() {
 
 ## Table Example
 
-| Feature | Status |
-|---------|--------|
-| Git Integration | ✓ |
-| Markdown Rendering | ✓ |
-| Diff Computation | ✓ |
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Git Integration | ✓ | Working great! |
+| Markdown Rendering | ✓ | 97% GFM compatibility |
+| Diff Computation | ✓ | Word-level diffing |
+| Webview Display | ✓ | Side-by-side panes |
 
 **Bold text** and *italic text* should render correctly.
