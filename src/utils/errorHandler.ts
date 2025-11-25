@@ -148,6 +148,39 @@ export function logError(message: string, error: Error): void {
 }
 
 /**
+ * Logs performance metric to output channel
+ *
+ * Implements NFR-O1 (performance logging) and Task 9 (performance monitoring).
+ *
+ * @param operation - Operation name (e.g., "gitRetrieval", "diffComputation")
+ * @param durationMs - Duration in milliseconds
+ */
+export function logPerformance(operation: string, durationMs: number): void {
+	const channel = getOutputChannel();
+	channel.appendLine(`[Performance] ${operation}: ${durationMs.toFixed(2)}ms`);
+}
+
+/**
+ * Logs performance warning when operation exceeds threshold
+ *
+ * Implements NFR-O1 (performance logging) and Task 9 (performance monitoring).
+ *
+ * @param operation - Operation name
+ * @param durationMs - Duration in milliseconds
+ * @param threshold - Expected threshold in milliseconds
+ */
+export function logPerformanceWarning(
+	operation: string,
+	durationMs: number,
+	threshold: number
+): void {
+	const channel = getOutputChannel();
+	channel.appendLine(
+		`[Performance Warning] ${operation}: ${durationMs.toFixed(2)}ms (threshold: ${threshold}ms)`
+	);
+}
+
+/**
  * Disposes error handler resources
  *
  * Call this when extension is deactivated.

@@ -61,12 +61,14 @@ describe('GitService', () => {
 		mockGit.show.mockResolvedValue('# HEAD content');
 		mockReadFile.mockResolvedValue(new TextEncoder().encode('# Working content'));
 
-		// Create fresh service instance
-		gitService = new GitService();
+		// Reset singleton and get fresh instance for test isolation
+		GitService.resetInstance();
+		gitService = GitService.getInstance();
 	});
 
 	afterEach(() => {
-		gitService.dispose();
+		// Clean up singleton instance
+		GitService.resetInstance();
 	});
 
 	describe('isInRepository', () => {

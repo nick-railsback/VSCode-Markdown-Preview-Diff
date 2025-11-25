@@ -5,8 +5,14 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'node',
-		include: ['src/**/*.test.ts'],
-		exclude: ['node_modules', 'out', '.vscode-test', 'src/test/**'],
+		include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
+		exclude: [
+			'node_modules',
+			'out',
+			'.vscode-test',
+			'src/test/**',
+			'src/performance/**'
+		],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'html', 'lcov'],

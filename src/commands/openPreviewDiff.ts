@@ -18,8 +18,8 @@ import { MarkdownRenderer } from '../markdown/markdownRenderer';
 import { DiffComputer } from '../diff/diffComputer';
 import { WebviewManager } from '../webview/webviewManager';
 import { RenderResult } from '../types/webview.types';
-import { GitError, GitErrorType } from '../types/git.types';
-import { logDebug, logInfo, logError } from '../utils/errorHandler';
+import { GitError } from '../types/git.types';
+import { logDebug, logInfo, logError, logPerformance, logPerformanceWarning, logWarning } from '../utils/errorHandler';
 
 /**
  * Main command handler: Markdown: Open Preview Diff
@@ -28,6 +28,8 @@ import { logDebug, logInfo, logError } from '../utils/errorHandler';
  * @param context - Extension context passed from activation
  */
 export async function openPreviewDiff(context: vscode.ExtensionContext): Promise<void> {
+	const perfStart = Date.now();
+	const perfMarks: { [key: string]: number } = {};
 	logDebug('[openPreviewDiff] Command invoked');
 
 	try {
@@ -48,7 +50,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 		logInfo(`[openPreviewDiff] Processing file: ${filePath}`);
 
 		// **STEP 2: Check if in git repository** (FR37, FR53, Task 2)
-		const gitService = new GitService();
+		const gitService = GitService.getInstance();
 		const isInRepo = await gitService.isInRepository(filePath);
 
 		if (!isInRepo) {
@@ -70,15 +72,29 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				progress.report({ increment: 20, message: 'Retrieving file versions...' });
 				logDebug('[openPreviewDiff] Retrieving HEAD and working versions');
 
+				const gitStart = Date.now();
 				const [headVersion, workingVersion] = await Promise.all([
 					gitService.getHeadVersion(filePath),
 					Promise.resolve(document.getText()) // Get working version from active editor
 				]);
+				perfMarks.gitRetrieval = Date.now() - gitStart;
 
 				const beforeContent = headVersion ?? ''; // New file: use empty string (FR42)
 				logInfo(
 					`[openPreviewDiff] Retrieved versions - HEAD: ${beforeContent.length} chars, Working: ${workingVersion.length} chars`
 				);
+
+				// **STEP 3.5: Check file size and warn for large files** (FR57, Task 7)
+				const MAX_OPTIMAL_SIZE = 100 * 1024; // 100KB
+				const fileSize = Buffer.from(workingVersion).length;
+
+				if (fileSize > MAX_OPTIMAL_SIZE) {
+					const fileSizeKB = (fileSize / 1024).toFixed(1);
+					vscode.window.showWarningMessage(
+						`Large file detected (${fileSizeKB} KB). Rendering may take longer than usual.`
+					);
+					logWarning(`Processing large file: ${fileSizeKB} KB (threshold: ${MAX_OPTIMAL_SIZE / 1024} KB)`);
+				}
 
 				// **STEP 4: Check if identical** (FR54, Task 4)
 				if (beforeContent === workingVersion) {
@@ -92,8 +108,10 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				progress.report({ increment: 20, message: 'Computing diff...' });
 				logDebug('[openPreviewDiff] Computing text diff');
 
+				const diffStart = Date.now();
 				const diffComputer = new DiffComputer();
 				const diffResult = diffComputer.compute(beforeContent, workingVersion);
+				perfMarks.diffComputation = Date.now() - diffStart;
 
 				logInfo(
 					`[openPreviewDiff] Diff computed - ${diffResult.changeCount} changes (${diffResult.addedLines} added, ${diffResult.removedLines} removed)`
@@ -103,6 +121,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				progress.report({ increment: 30, message: 'Rendering markdown...' });
 				logDebug('[openPreviewDiff] Rendering markdown to HTML');
 
+				const renderStart = Date.now();
 				const renderer = new MarkdownRenderer();
 				const workspaceRoot = vscode.workspace.getWorkspaceFolder(document.uri)?.uri.fsPath || '';
 
@@ -117,6 +136,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 						markdownFilePath: filePath
 					})
 				]);
+				perfMarks.markdownRendering = Date.now() - renderStart;
 
 				// Check for rendering errors (FR55)
 				if (!beforeResult.success) {
@@ -146,7 +166,35 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				progress.report({ increment: 30, message: 'Creating diff view...' });
 				logDebug('[openPreviewDiff] Creating webview panel');
 
+				const webviewStart = Date.now();
 				WebviewManager.createDiffPanel(context, renderResult);
+				perfMarks.webviewInit = Date.now() - webviewStart;
+
+				// Calculate total time and log all performance metrics
+				const total = Date.now() - perfStart;
+
+				logPerformance('gitRetrieval', perfMarks.gitRetrieval);
+				logPerformance('diffComputation', perfMarks.diffComputation);
+				logPerformance('markdownRendering', perfMarks.markdownRendering);
+				logPerformance('webviewInit', perfMarks.webviewInit);
+				logPerformance('total', total);
+
+				// Warn if exceeding targets (NFR-O1)
+				if (perfMarks.gitRetrieval > 500) {
+					logPerformanceWarning('gitRetrieval', perfMarks.gitRetrieval, 500);
+				}
+				if (perfMarks.diffComputation > 500) {
+					logPerformanceWarning('diffComputation', perfMarks.diffComputation, 500);
+				}
+				if (perfMarks.markdownRendering > 1000) {
+					logPerformanceWarning('markdownRendering', perfMarks.markdownRendering, 1000);
+				}
+				if (perfMarks.webviewInit > 500) {
+					logPerformanceWarning('webviewInit', perfMarks.webviewInit, 500);
+				}
+				if (total > 2000) {
+					logPerformanceWarning('total', total, 2000);
+				}
 
 				logInfo('[openPreviewDiff] Command completed successfully');
 			}
