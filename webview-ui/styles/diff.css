@@ -1,0 +1,19 @@
+/* Diff highlighting styles (placeholder for Epic 3) */
+
+/* This file will contain visual diff highlighting styles */
+/* To be implemented in Epic 3: Visual Diff Highlighting & Change Detection */
+
+/* Placeholder for future diff highlighting */
+.diff-added {
+  background-color: var(--vscode-diffEditor-insertedTextBackground, rgba(0, 255, 0, 0.2));
+  border: 1px solid var(--vscode-diffEditor-insertedTextBorder, rgba(0, 255, 0, 0.4));
+}
+
+.diff-removed {
+  background-color: var(--vscode-diffEditor-removedTextBackground, rgba(255, 0, 0, 0.2));
+  border: 1px solid var(--vscode-diffEditor-removedTextBorder, rgba(255, 0, 0, 0.4));
+}
+
+.diff-changed {
+  background-color: var(--vscode-diffEditor-insertedTextBackground, rgba(255, 255, 0, 0.2));
+}

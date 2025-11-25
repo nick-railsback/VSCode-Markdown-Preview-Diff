@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- CSP will be injected by ContentBuilder -->
+  <title>Markdown Preview Diff</title>
+  <!-- Styles will be injected by ContentBuilder -->
+</head>
+<body>
+  <!-- Loading Indicator -->
+  <div id="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading diff...</p>
+  </div>
+
+  <!-- Diff Container (initially hidden) -->
+  <div id="diff-container" class="diff-container" style="display: none;">
+    <!-- Before Pane (HEAD) -->
+    <div class="pane pane-before">
+      <div class="pane-header">Before (HEAD)</div>
+      <div class="pane-content markdown-body" id="before-content">
+        <!-- Before content will be injected here -->
+      </div>
+    </div>
+
+    <!-- After Pane (Working) -->
+    <div class="pane pane-after">
+      <div class="pane-header">After (Working)</div>
+      <div class="pane-content markdown-body" id="after-content">
+        <!-- After content will be injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Script will be injected by ContentBuilder -->
+</body>
+</html>

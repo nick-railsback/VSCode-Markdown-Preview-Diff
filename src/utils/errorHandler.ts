@@ -1,0 +1,160 @@
+/**
+ * Centralized error handling and user messaging
+ *
+ * Provides actionable error messages to users per FR59 (git failures) and FR53 (not in repo).
+ * Implements NFR-R1 (graceful error handling) and NFR-R3 (git failure recovery).
+ */
+
+import * as vscode from 'vscode';
+import { GitError, GitErrorType } from '../types/git.types';
+
+/**
+ * Output channel for extension logging
+ * Created lazily on first use
+ */
+let outputChannel: vscode.OutputChannel | null = null;
+
+/**
+ * Gets or creates the extension's output channel
+ */
+function getOutputChannel(): vscode.OutputChannel {
+	if (!outputChannel) {
+		outputChannel = vscode.window.createOutputChannel('Markdown Preview Diff');
+	}
+	return outputChannel;
+}
+
+/**
+ * Handles git errors and displays user-friendly messages
+ *
+ * Logs detailed error information to output channel for debugging.
+ * Displays actionable error messages to users via VS Code UI.
+ *
+ * @param error - Error to handle (GitError or generic Error)
+ * @param context - Context string describing what operation failed (e.g., "retrieving HEAD version")
+ */
+export function handleGitError(error: Error | GitError, context: string): void {
+	const channel = getOutputChannel();
+
+	// Log detailed error to output channel
+	channel.appendLine(`[ERROR] ${new Date().toISOString()} - ${context}`);
+	channel.appendLine(`Error: ${error.message}`);
+	if (error.stack) {
+		channel.appendLine(`Stack: ${error.stack}`);
+	}
+
+	// Display user-friendly message
+	if (error instanceof GitError) {
+		const userMessage = getUserFriendlyMessage(error);
+		vscode.window.showErrorMessage(userMessage);
+	} else {
+		// Generic error fallback
+		vscode.window.showErrorMessage(
+			`Failed to ${context}. See Output panel for details.`,
+			'Show Output'
+		).then(selection => {
+			if (selection === 'Show Output') {
+				channel.show();
+			}
+		});
+	}
+}
+
+/**
+ * Converts GitError to user-friendly message with troubleshooting guidance
+ *
+ * Implements FR53, FR59 (actionable error messages).
+ *
+ * @param error - GitError to convert
+ * @returns User-friendly error message
+ */
+function getUserFriendlyMessage(error: GitError): string {
+	switch (error.type) {
+		case GitErrorType.GitNotInstalled:
+			return '⚠️ Git is not installed or not in your PATH. Please install git (https://git-scm.com/) and restart VS Code.';
+
+		case GitErrorType.NotInRepository:
+			return '⚠️ This file is not in a git repository. Preview Diff requires git version control. Initialize a git repository with "git init" or open a folder with an existing repository.';
+
+		case GitErrorType.FileNotFound:
+			return `⚠️ File not found: ${error.message}`;
+
+		case GitErrorType.PermissionDenied:
+			return '⚠️ Permission denied accessing git repository. Check file permissions and ensure you have read access to the repository.';
+
+		case GitErrorType.RepositoryCorrupted:
+			return '⚠️ Git repository may be corrupted. Try running "git status" in the terminal to diagnose the issue.';
+
+		case GitErrorType.InvalidPath:
+			return `⚠️ Invalid file path: ${error.message}`;
+
+		case GitErrorType.Unknown:
+		default:
+			return `⚠️ Git operation failed: ${error.message}. Check the Output panel for more details.`;
+	}
+}
+
+/**
+ * Logs informational message to output channel
+ *
+ * @param message - Message to log
+ */
+export function logInfo(message: string): void {
+	const channel = getOutputChannel();
+	channel.appendLine(`[INFO] ${new Date().toISOString()} - ${message}`);
+}
+
+/**
+ * Logs warning message to output channel and optionally shows to user
+ *
+ * @param message - Warning message
+ * @param showToUser - Whether to display warning message to user
+ */
+export function logWarning(message: string, showToUser: boolean = false): void {
+	const channel = getOutputChannel();
+	channel.appendLine(`[WARN] ${new Date().toISOString()} - ${message}`);
+
+	if (showToUser) {
+		vscode.window.showWarningMessage(message);
+	}
+}
+
+/**
+ * Logs debug message to output channel (only when VS Code log level is debug)
+ *
+ * @param message - Debug message
+ */
+export function logDebug(message: string): void {
+	// Only log debug messages in development or when explicitly enabled
+	if (process.env.NODE_ENV === 'development') {
+		const channel = getOutputChannel();
+		channel.appendLine(`[DEBUG] ${new Date().toISOString()} - ${message}`);
+	}
+}
+
+/**
+ * Logs error message to output channel with stack trace
+ *
+ * @param message - Error context message
+ * @param error - Error object
+ */
+export function logError(message: string, error: Error): void {
+	const channel = getOutputChannel();
+	channel.appendLine(`[ERROR] ${new Date().toISOString()} - ${message}`);
+	channel.appendLine(`Error: ${error.message}`);
+	if (error.stack) {
+		channel.appendLine(`Stack: ${error.stack}`);
+	}
+}
+
+/**
+ * Disposes error handler resources
+ *
+ * Call this when extension is deactivated.
+ */
+export function dispose(): void {
+	if (outputChannel) {
+		outputChannel.dispose();
+		outputChannel = null;
+	}
+}
