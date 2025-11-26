@@ -17,6 +17,7 @@ import { GitService } from '../git/gitService';
 import { MarkdownRenderer } from '../markdown/markdownRenderer';
 import { DiffComputer } from '../diff/diffComputer';
 import { DiffHighlighter } from '../diff/diffHighlighter';
+import { ChangeNavigator } from '../diff/changeNavigator';
 import { WebviewManager } from '../webview/webviewManager';
 import { RenderResult } from '../types/webview.types';
 import { GitError } from '../types/git.types';
@@ -189,6 +190,13 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 					};
 					perfMarks.diffHighlighting = Date.now() - highlightStart;
 				}
+
+				// **STEP 6.75: Initialize ChangeNavigator** (Epic 3, Story 3.2)
+				// ChangeNavigator tracks change locations for Epic 4 navigation commands
+				logDebug('[openPreviewDiff] Initializing ChangeNavigator');
+				const changeNavigator = new ChangeNavigator(highlightedResult.changeLocations);
+				logInfo(`[openPreviewDiff] ChangeNavigator initialized - ${changeNavigator.getTotalChanges()} changes tracked`);
+				// Note: changeNavigator will be passed to WebviewManager in Epic 4 (Stories 4.1, 4.3)
 
 				// **STEP 7: Assemble RenderResult** (Task 7)
 				const renderResult: RenderResult = {
