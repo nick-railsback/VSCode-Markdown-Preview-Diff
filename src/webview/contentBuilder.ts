@@ -55,6 +55,11 @@ export class ContentBuilder {
 		<p>Loading diff...</p>
 	</div>
 
+	<!-- Toolbar with change counter (Epic 4) -->
+	<div id="toolbar" class="toolbar">
+		<span id="change-counter" class="change-counter">${renderResult.changes.length > 0 ? `Change 1 of ${renderResult.changes.length}` : 'No changes'}</span>
+	</div>
+
 	<!-- Diff Container (initially hidden) -->
 	<div id="diff-container" class="diff-container" style="display: none;">
 		<!-- Before Pane (HEAD) -->

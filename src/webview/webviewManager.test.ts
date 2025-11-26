@@ -46,6 +46,9 @@ vi.mock('vscode', () => ({
 	workspace: {
 		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
 	},
+	commands: {
+		executeCommand: vi.fn(),
+	},
 }));
 
 // Mock ContentBuilder
@@ -60,6 +63,7 @@ vi.mock('./messageHandler', () => ({
 	MessageHandler: class MockMessageHandler {
 		handleMessage = vi.fn();
 		sendMessage = vi.fn();
+		setRenderResult = vi.fn();
 		constructor(public webview: any) {}
 	},
 }));

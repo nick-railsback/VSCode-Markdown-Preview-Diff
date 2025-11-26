@@ -196,7 +196,6 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				logDebug('[openPreviewDiff] Initializing ChangeNavigator');
 				const changeNavigator = new ChangeNavigator(highlightedResult.changeLocations);
 				logInfo(`[openPreviewDiff] ChangeNavigator initialized - ${changeNavigator.getTotalChanges()} changes tracked`);
-				// Note: changeNavigator will be passed to WebviewManager in Epic 4 (Stories 4.1, 4.3)
 
 				// **STEP 7: Assemble RenderResult** (Task 7)
 				const renderResult: RenderResult = {
@@ -210,7 +209,8 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				logDebug('[openPreviewDiff] Creating webview panel');
 
 				const webviewStart = Date.now();
-				WebviewManager.createDiffPanel(context, renderResult);
+				// Pass changeNavigator to WebviewManager for Epic 4 navigation commands
+				WebviewManager.createDiffPanel(context, renderResult, changeNavigator);
 				perfMarks.webviewInit = Date.now() - webviewStart;
 
 				// Calculate total time and log all performance metrics

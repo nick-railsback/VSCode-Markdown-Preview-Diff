@@ -10,6 +10,10 @@
 	// State management
 	let currentState = null;
 
+	// Change navigation state (Epic 4)
+	let changeLocations = [];
+	let currentChangeIndex = 0;
+
 	// Send ready message on load
 	window.addEventListener('DOMContentLoaded', () => {
 		console.log('[Webview] DOM loaded, sending ready message');
@@ -57,12 +61,18 @@
 		}
 	});
 
-	// Arrow key navigation (for future use in Epic 4)
+	// Keyboard navigation for changes (Epic 4)
+	// n = next change, p = previous change (when webview is focused)
 	window.addEventListener('keydown', (event) => {
-		if (event.key === 'ArrowRight' || event.key === 'n') {
-			vscode.postMessage({ type: 'nextChange' });
-		} else if (event.key === 'ArrowLeft' || event.key === 'p') {
+		if (event.key === 'p') {
+			event.preventDefault();
+			console.log('[Webview] Previous change key pressed: p');
 			vscode.postMessage({ type: 'prevChange' });
+		}
+		else if (event.key === 'n') {
+			event.preventDefault();
+			console.log('[Webview] Next change key pressed: n');
+			vscode.postMessage({ type: 'nextChange' });
 		}
 	});
 
@@ -75,6 +85,15 @@
 		// Store state
 		currentState = data;
 		vscode.setState(currentState);
+
+		// Store change locations for navigation (Epic 4)
+		if (data.renderResult && data.renderResult.changes) {
+			changeLocations = data.renderResult.changes;
+			currentChangeIndex = 0;
+			console.log(`[Webview] Loaded ${changeLocations.length} change locations`);
+			// Initialize change counter
+			updateChangeCounter(0, changeLocations.length);
+		}
 
 		// Hide loading spinner
 		hideLoadingSpinner();
@@ -112,14 +131,75 @@
 
 	/**
 	 * Handle navigateToChange message (Epic 4)
+	 * Implements AC8 (Webview Message Protocol), AC9 (Current Change Visual Highlighting), AC10 (Scroll Position)
 	 */
 	function handleNavigateToChange(changeIndex) {
 		console.log('[Webview] Navigate to change:', changeIndex);
 
-		// Placeholder for Epic 4: Change Navigation
-		// Will scroll to the specific change location
-		// For now, just log the request
-		console.log('[Webview] Change navigation not yet implemented (Epic 4)');
+		if (changeIndex < 0 || changeIndex >= changeLocations.length) {
+			console.warn('[Webview] Invalid change index:', changeIndex);
+			return;
+		}
+
+		// Get the change location
+		const change = changeLocations[changeIndex];
+		if (!change) {
+			console.warn('[Webview] No change found at index:', changeIndex);
+			return;
+		}
+
+		// Remove previous current change highlighting (AC9)
+		document.querySelectorAll('.diff-current').forEach(el => {
+			el.classList.remove('diff-current');
+		});
+
+		// Find elements with the change ID in both panes
+		const changeId = change.id;
+		const beforeElements = document.querySelectorAll(`#before-content [data-change-id="${changeId}"]`);
+		const afterElements = document.querySelectorAll(`#after-content [data-change-id="${changeId}"]`);
+
+		console.log(`[Webview] Found ${beforeElements.length} before elements, ${afterElements.length} after elements for change ${changeId}`);
+
+		// Add highlighting and scroll to first found element (AC9, AC10)
+		let scrollTarget = null;
+
+		beforeElements.forEach(el => {
+			el.classList.add('diff-current');
+			if (!scrollTarget) scrollTarget = el;
+		});
+
+		afterElements.forEach(el => {
+			el.classList.add('diff-current');
+			if (!scrollTarget) scrollTarget = el;
+		});
+
+		// Scroll to the change with smooth animation (AC10)
+		if (scrollTarget) {
+			scrollTarget.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center'
+			});
+		}
+
+		// Update current change index and counter (AC7)
+		currentChangeIndex = changeIndex;
+		updateChangeCounter(changeIndex, changeLocations.length);
+	}
+
+	/**
+	 * Update change counter display (AC7)
+	 * @param {number} currentIndex - Current change index (0-based)
+	 * @param {number} total - Total number of changes
+	 */
+	function updateChangeCounter(currentIndex, total) {
+		const counter = document.getElementById('change-counter');
+		if (counter) {
+			if (total > 0) {
+				counter.textContent = `Change ${currentIndex + 1} of ${total}`;
+			} else {
+				counter.textContent = 'No changes';
+			}
+		}
 	}
 
 	/**

@@ -4,11 +4,21 @@
  */
 
 import * as vscode from 'vscode';
-import { WebviewMessage, ExtensionMessage } from '../types/webview.types';
+import { WebviewMessage, ExtensionMessage, RenderResult } from '../types/webview.types';
 import { logDebug, logInfo, logWarning } from '../utils/errorHandler';
 
 export class MessageHandler {
+	private renderResult: RenderResult | undefined;
+
 	constructor(private readonly webview: vscode.Webview) {}
+
+	/**
+	 * Set the render result for initialization
+	 * Must be called before webview sends 'ready' message
+	 */
+	public setRenderResult(renderResult: RenderResult): void {
+		this.renderResult = renderResult;
+	}
 
 	/**
 	 * Handle messages received from webview
@@ -17,8 +27,22 @@ export class MessageHandler {
 		switch (message.type) {
 			case 'ready':
 				logInfo('MessageHandler: Webview ready');
-				// Webview is ready to receive messages
-				// Send initialize message if needed
+				// Send initialize message with render result and change locations
+				if (this.renderResult) {
+					logDebug(`MessageHandler: Sending initialize with ${this.renderResult.changes.length} changes`);
+					this.sendMessage({
+						type: 'initialize',
+						data: {
+							renderResult: this.renderResult,
+							config: {
+								syncScroll: true,
+								highlightStyle: 'default'
+							}
+						}
+					});
+				} else {
+					logWarning('MessageHandler: No render result available for initialization');
+				}
 				break;
 
 			case 'nextChange':

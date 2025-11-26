@@ -7,19 +7,25 @@ import * as vscode from 'vscode';
 import { RenderResult } from '../types/webview.types';
 import { ContentBuilder } from './contentBuilder';
 import { MessageHandler } from './messageHandler';
+import { ChangeNavigator } from '../diff/changeNavigator';
 import { logDebug, logInfo } from '../utils/errorHandler';
 
 export class WebviewManager {
 	private static activePanel: vscode.WebviewPanel | undefined;
 	private static messageHandler: MessageHandler | undefined;
+	private static changeNavigator: ChangeNavigator | undefined;
 
 	/**
 	 * Create a new diff panel or reuse existing one
 	 * Implements single active panel pattern (ADR-009)
+	 * @param context - Extension context
+	 * @param renderResult - Rendered diff content
+	 * @param changeNavigator - Optional ChangeNavigator for navigation commands
 	 */
 	public static createDiffPanel(
 		context: vscode.ExtensionContext,
-		renderResult: RenderResult
+		renderResult: RenderResult,
+		changeNavigator?: ChangeNavigator
 	): void {
 		logDebug('WebviewManager: Creating diff panel');
 
@@ -28,7 +34,11 @@ export class WebviewManager {
 			logInfo('WebviewManager: Disposing previous panel');
 			WebviewManager.activePanel.dispose();
 			WebviewManager.activePanel = undefined;
+			WebviewManager.changeNavigator = undefined;
 		}
+
+		// Store change navigator for navigation commands
+		WebviewManager.changeNavigator = changeNavigator;
 
 		// Create webview panel
 		const panel = vscode.window.createWebviewPanel(
@@ -46,6 +56,9 @@ export class WebviewManager {
 
 		WebviewManager.activePanel = panel;
 
+		// Set context for command availability (AC11)
+		vscode.commands.executeCommand('setContext', 'markdown.previewDiff.panelActive', true);
+
 		// Set HTML content
 		panel.webview.html = ContentBuilder.buildWebviewHtml(
 			panel.webview,
@@ -53,8 +66,9 @@ export class WebviewManager {
 			renderResult
 		);
 
-		// Set up message handler
+		// Set up message handler with render result for initialization
 		WebviewManager.messageHandler = new MessageHandler(panel.webview);
+		WebviewManager.messageHandler.setRenderResult(renderResult);
 		panel.webview.onDidReceiveMessage(
 			(message) => WebviewManager.messageHandler!.handleMessage(message),
 			undefined,
@@ -67,6 +81,9 @@ export class WebviewManager {
 				logInfo('WebviewManager: Panel disposed, cleaning up');
 				WebviewManager.activePanel = undefined;
 				WebviewManager.messageHandler = undefined;
+				WebviewManager.changeNavigator = undefined;
+				// Clear context for command availability (AC11)
+				vscode.commands.executeCommand('setContext', 'markdown.previewDiff.panelActive', false);
 			},
 			null,
 			context.subscriptions
@@ -134,5 +151,13 @@ export class WebviewManager {
 	 */
 	public static hasActivePanel(): boolean {
 		return WebviewManager.activePanel !== undefined;
+	}
+
+	/**
+	 * Get the ChangeNavigator for the active panel
+	 * Used by navigation commands to navigate between changes
+	 */
+	public static getChangeNavigator(): ChangeNavigator | undefined {
+		return WebviewManager.changeNavigator;
 	}
 }

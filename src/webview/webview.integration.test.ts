@@ -58,6 +58,9 @@ vi.mock('vscode', () => ({
 	workspace: {
 		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
 	},
+	commands: {
+		executeCommand: vi.fn(),
+	},
 }));
 
 describe('Webview Integration Tests', () => {

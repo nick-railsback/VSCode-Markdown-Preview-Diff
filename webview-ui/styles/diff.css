@@ -72,3 +72,27 @@
 .markdown-body th {
 	position: relative;
 }
+
+/* Current change highlighting (AC9 - Epic 4)
+ * Applied to the change currently being navigated to
+ * Uses VS Code focus border color for consistency
+ * Meets WCAG AA contrast requirements (4.5:1)
+ */
+.diff-current {
+	outline: 2px solid var(--vscode-focusBorder, #007acc);
+	outline-offset: 2px;
+	box-shadow: 0 0 8px rgba(0, 122, 204, 0.4);
+	border-radius: 3px;
+}
+
+/* Current change when added */
+.diff-current.diff-added {
+	outline-color: var(--vscode-gitDecoration-addedResourceForeground, #4d9375);
+	box-shadow: 0 0 8px rgba(77, 147, 117, 0.4);
+}
+
+/* Current change when removed */
+.diff-current.diff-removed {
+	outline-color: var(--vscode-gitDecoration-deletedResourceForeground, #ab5656);
+	box-shadow: 0 0 8px rgba(171, 86, 86, 0.4);
+}

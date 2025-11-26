@@ -41,14 +41,6 @@
         "key": "ctrl+k d",
         "mac": "cmd+k d",
         "when": "editorLangId == markdown"
-      },
-      {
-        "command": "markdown.previewDiff.nextChange",
-        "key": "f8"
-      },
-      {
-        "command": "markdown.previewDiff.prevChange",
-        "key": "shift+f8"
       }
     ],
     "menus": {
