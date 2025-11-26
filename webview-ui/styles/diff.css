@@ -1,19 +1,74 @@
-/* Diff highlighting styles (placeholder for Epic 3) */
+/**
+ * Diff Highlighting Styles
+ * Theme-aware CSS for visual change indicators
+ *
+ * Uses VS Code CSS variables for automatic theme adaptation (NFR-I3)
+ * - Adapts to light/dark themes automatically
+ * - Fallback colors (GitHub style) for compatibility
+ * - Meets WCAG AA contrast requirements (4.5:1)
+ */
 
-/* This file will contain visual diff highlighting styles */
-/* To be implemented in Epic 3: Visual Diff Highlighting & Change Detection */
-
-/* Placeholder for future diff highlighting */
+/* Added content highlighting (AC1) */
 .diff-added {
-  background-color: var(--vscode-diffEditor-insertedTextBackground, rgba(0, 255, 0, 0.2));
-  border: 1px solid var(--vscode-diffEditor-insertedTextBorder, rgba(0, 255, 0, 0.4));
+	/* Use VS Code diff editor colors, fallback to GitHub green */
+	background-color: var(
+		--vscode-diffEditor-insertedTextBackground,
+		rgba(16, 185, 129, 0.2)
+	);
+	/* Solid green underline border */
+	border-bottom: 2px solid var(
+		--vscode-gitDecoration-addedResourceForeground,
+		rgb(16, 185, 129)
+	);
 }
 
+/* Removed content highlighting (AC2) */
 .diff-removed {
-  background-color: var(--vscode-diffEditor-removedTextBackground, rgba(255, 0, 0, 0.2));
-  border: 1px solid var(--vscode-diffEditor-removedTextBorder, rgba(255, 0, 0, 0.4));
+	/* Use VS Code diff editor colors, fallback to GitHub red */
+	background-color: var(
+		--vscode-diffEditor-removedTextBackground,
+		rgba(239, 68, 68, 0.2)
+	);
+	/* Line-through text decoration */
+	text-decoration: line-through;
+	/* Solid red underline border */
+	border-bottom: 2px solid var(
+		--vscode-gitDecoration-deletedResourceForeground,
+		rgb(239, 68, 68)
+	);
 }
 
-.diff-changed {
-  background-color: var(--vscode-diffEditor-insertedTextBackground, rgba(255, 255, 0, 0.2));
+/* Gutter markers for change regions (AC4) */
+.diff-gutter-marker {
+	position: absolute;
+	/* Position at left edge (-20px relative to content) */
+	left: -20px;
+	/* Use VS Code foreground color with reduced opacity, fallback to gray */
+	color: var(--vscode-editor-foreground, #666);
+	opacity: 0.6;
+	font-weight: bold;
+	/* Ensure marker doesn't interfere with text selection */
+	user-select: none;
+	pointer-events: none;
+}
+
+/* Ensure parent elements have position: relative for gutter positioning */
+.markdown-body {
+	position: relative;
+}
+
+/* Ensure code blocks also support relative positioning for gutter markers */
+.markdown-body pre {
+	position: relative;
+}
+
+/* Ensure list items support relative positioning for gutter markers */
+.markdown-body li {
+	position: relative;
+}
+
+/* Ensure table cells support relative positioning for gutter markers */
+.markdown-body td,
+.markdown-body th {
+	position: relative;
 }

@@ -4,6 +4,9 @@ node_modules
 .vscode-test/
 *.vsix
 
+# macOS system files
+.DS_Store
+
 # BMAD development workflow files (internal tooling only)
 .bmad/
 

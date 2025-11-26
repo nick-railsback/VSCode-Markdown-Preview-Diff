@@ -47,3 +47,36 @@ export interface DiffResult {
 	/** Number of line regions removed (count of newlines in removed changes) */
 	removedLines: number;
 }
+
+/**
+ * Location of a change in the DOM for navigation
+ * Used by Epic 4 navigation features
+ */
+export interface ChangeLocation {
+	/** Unique identifier for this change (e.g., "change-1", "change-2") */
+	id: string;
+
+	/** DOM offset (scrollTop value) for before pane */
+	beforeOffset: number;
+
+	/** DOM offset (scrollTop value) for after pane */
+	afterOffset: number;
+
+	/** Type of change: 'added' | 'removed' | 'both' (if word changed) */
+	type: 'added' | 'removed' | 'both';
+}
+
+/**
+ * Result of applying diff highlighting to HTML
+ * Contains highlighted HTML and change location metadata
+ */
+export interface HighlightedResult {
+	/** HTML with <span class="diff-added"> and <span class="diff-removed"> injected */
+	beforeHtml: string;
+
+	/** HTML with <span class="diff-added"> and <span class="diff-removed"> injected */
+	afterHtml: string;
+
+	/** Array of change locations for navigation (Epic 4) */
+	changeLocations: ChangeLocation[];
+}

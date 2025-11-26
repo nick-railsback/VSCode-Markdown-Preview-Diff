@@ -16,6 +16,7 @@ import * as vscode from 'vscode';
 import { GitService } from '../git/gitService';
 import { MarkdownRenderer } from '../markdown/markdownRenderer';
 import { DiffComputer } from '../diff/diffComputer';
+import { DiffHighlighter } from '../diff/diffHighlighter';
 import { WebviewManager } from '../webview/webviewManager';
 import { RenderResult } from '../types/webview.types';
 import { GitError } from '../types/git.types';
@@ -155,11 +156,45 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 
 				logInfo('[openPreviewDiff] Markdown rendered successfully');
 
+				// **STEP 6.5: Apply diff highlighting** (Epic 3, Story 3.1)
+				progress.report({ increment: 10, message: 'Applying diff highlighting...' });
+				logDebug('[openPreviewDiff] Applying diff highlighting');
+
+				const highlightStart = Date.now();
+				const diffHighlighter = new DiffHighlighter();
+
+				let highlightedResult;
+				try {
+					highlightedResult = diffHighlighter.applyHighlights(
+						beforeResult.html,
+						afterResult.html,
+						diffResult.changes
+					);
+					perfMarks.diffHighlighting = Date.now() - highlightStart;
+
+					// Log performance
+					logPerformance('diffHighlighting', perfMarks.diffHighlighting);
+					if (perfMarks.diffHighlighting > 200) {
+						logPerformanceWarning('diffHighlighting', perfMarks.diffHighlighting, 200);
+					}
+
+					logInfo(`[openPreviewDiff] Diff highlighting applied - ${highlightedResult.changeLocations.length} change locations tracked`);
+				} catch (highlightError) {
+					// Graceful degradation (AC15)
+					logError('Diff highlighting failed, showing unhighlighted diff', highlightError as Error);
+					highlightedResult = {
+						beforeHtml: beforeResult.html,
+						afterHtml: afterResult.html,
+						changeLocations: []
+					};
+					perfMarks.diffHighlighting = Date.now() - highlightStart;
+				}
+
 				// **STEP 7: Assemble RenderResult** (Task 7)
 				const renderResult: RenderResult = {
-					beforeHtml: beforeResult.html,
-					afterHtml: afterResult.html,
-					changes: [] // Epic 3 will populate with ChangeLocation objects
+					beforeHtml: highlightedResult.beforeHtml,
+					afterHtml: highlightedResult.afterHtml,
+					changes: highlightedResult.changeLocations
 				};
 
 				// **STEP 8: Create webview panel** (FR6-FR11, Task 8)
