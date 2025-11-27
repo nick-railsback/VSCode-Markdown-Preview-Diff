@@ -296,4 +296,132 @@ describe('DiffHighlighter', () => {
 			expect(result.changeLocations).toBeDefined();
 		});
 	});
+
+	describe('Story 4.2b: Tag-Boundary-Aware Span Injection', () => {
+		it('should wrap text segments separately when change spans multiple HTML elements', () => {
+			// Simulating a change that spans from heading into paragraph
+			const beforeHtml = '<h1>Title</h1>';
+			const afterHtml = '<h1>Title</h1><p>New paragraph</p>';
+			const changes: Change[] = [
+				{ type: 'unchanged', value: 'Title', startIndex: 0, endIndex: 5 },
+				{ type: 'added', value: 'New paragraph', startIndex: 5, endIndex: 18 }
+			];
+
+			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
+
+			// Should NOT have block elements inside spans
+			expect(result.afterHtml).not.toMatch(/<span[^>]*><h1>/);
+			expect(result.afterHtml).not.toMatch(/<span[^>]*><p>/);
+			expect(result.afterHtml).not.toMatch(/<\/h1><\/span>/);
+			expect(result.afterHtml).not.toMatch(/<\/p><\/span>/);
+
+			// Should still have the diff-added class
+			expect(result.afterHtml).toContain('diff-added');
+			expect(result.afterHtml).toContain('New paragraph');
+		});
+
+		it('should create multiple spans for text in different HTML elements', () => {
+			const beforeHtml = '<p>old</p>';
+			const afterHtml = '<p>first</p><p>second</p>';
+			const changes: Change[] = [
+				{ type: 'removed', value: 'old', startIndex: 0, endIndex: 3 },
+				{ type: 'added', value: 'firstsecond', startIndex: 0, endIndex: 11 }
+			];
+
+			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
+
+			// Count how many diff-added spans exist (should be 2, one for each paragraph)
+			const spanMatches = result.afterHtml.match(/diff-added/g);
+			expect(spanMatches).not.toBeNull();
+			expect(spanMatches!.length).toBe(2);
+		});
+
+		it('should handle changes within a single element (no tag crossing)', () => {
+			const beforeHtml = '<p>hello world</p>';
+			const afterHtml = '<p>hello universe</p>';
+			const changes: Change[] = [
+				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
+				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 },
+				{ type: 'added', value: 'universe', startIndex: 6, endIndex: 14 }
+			];
+
+			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
+
+			// Should still work correctly for single-element changes
+			expect(result.beforeHtml).toContain('<span class="diff-removed"');
+			expect(result.beforeHtml).toContain('world</span>');
+			expect(result.afterHtml).toContain('<span class="diff-added"');
+			expect(result.afterHtml).toContain('universe</span>');
+		});
+
+		it('should handle large additions spanning heading, paragraph, and list', () => {
+			const beforeHtml = '<h1>Title</h1>';
+			const afterHtml = '<h1>Title</h1><p>Intro text</p><ul><li>Item 1</li><li>Item 2</li></ul>';
+			const changes: Change[] = [
+				{ type: 'unchanged', value: 'Title', startIndex: 0, endIndex: 5 },
+				{ type: 'added', value: 'Intro textItem 1Item 2', startIndex: 5, endIndex: 27 }
+			];
+
+			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
+
+			// Should have diff-added spans for each text segment
+			expect(result.afterHtml).toContain('diff-added');
+			// Should preserve HTML structure (no block elements inside spans)
+			expect(result.afterHtml).toContain('<p>');
+			expect(result.afterHtml).toContain('</p>');
+			expect(result.afterHtml).toContain('<ul>');
+			expect(result.afterHtml).toContain('<li>');
+
+			// The spans should wrap text content, not block elements
+			// Check that </p> is not followed immediately by </span>
+			expect(result.afterHtml).not.toMatch(/<\/p><\/span>/);
+			expect(result.afterHtml).not.toMatch(/<\/li><\/span>/);
+		});
+
+		it('should not wrap empty text segments', () => {
+			const beforeHtml = '<p></p>';
+			const afterHtml = '<p></p><p>new</p>';
+			const changes: Change[] = [
+				{ type: 'added', value: 'new', startIndex: 0, endIndex: 3 }
+			];
+
+			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
+
+			// Should only wrap "new", not create empty spans
+			expect(result.afterHtml).toContain('diff-added');
+			expect(result.afterHtml).toContain('>new<');
+		});
+	});
+
+	describe('extractTextFromHtml', () => {
+		it('should extract plain text from simple HTML', () => {
+			const html = '<p>Hello World</p>';
+			const text = diffHighlighter.extractTextFromHtml(html);
+			expect(text).toBe('Hello World');
+		});
+
+		it('should extract text from nested HTML', () => {
+			const html = '<div><h1>Title</h1><p>Paragraph</p></div>';
+			const text = diffHighlighter.extractTextFromHtml(html);
+			expect(text).toBe('TitleParagraph');
+		});
+
+		it('should handle HTML with attributes', () => {
+			const html = '<p class="intro" id="main">Content</p>';
+			const text = diffHighlighter.extractTextFromHtml(html);
+			expect(text).toBe('Content');
+		});
+
+		it('should handle empty HTML', () => {
+			const html = '<div></div>';
+			const text = diffHighlighter.extractTextFromHtml(html);
+			expect(text).toBe('');
+		});
+
+		it('should preserve whitespace in text content', () => {
+			const html = '<p>Hello   World</p>';
+			const text = diffHighlighter.extractTextFromHtml(html);
+			expect(text).toBe('Hello   World');
+		});
+	});
 });

@@ -106,20 +106,9 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 					return;
 				}
 
-				// **STEP 5: Compute diff** (Task 5)
-				progress.report({ increment: 20, message: 'Computing diff...' });
-				logDebug('[openPreviewDiff] Computing text diff');
-
-				const diffStart = Date.now();
-				const diffComputer = new DiffComputer();
-				const diffResult = diffComputer.compute(beforeContent, workingVersion);
-				perfMarks.diffComputation = Date.now() - diffStart;
-
-				logInfo(
-					`[openPreviewDiff] Diff computed - ${diffResult.changeCount} changes (${diffResult.addedLines} added, ${diffResult.removedLines} removed)`
-				);
-
-				// **STEP 6: Render markdown** (FR12-FR20, Task 6)
+				// **STEP 5: Render markdown FIRST** (FR12-FR20, Task 6)
+				// Note: We render first, then diff the rendered text content
+				// This ensures diff positions align with HTML text positions (Story 4.2b fix)
 				progress.report({ increment: 30, message: 'Rendering markdown...' });
 				logDebug('[openPreviewDiff] Rendering markdown to HTML');
 
@@ -157,12 +146,31 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 
 				logInfo('[openPreviewDiff] Markdown rendered successfully');
 
+				// **STEP 6: Compute diff on rendered HTML text content** (Task 5, Story 4.2b fix)
+				// Extract text from HTML and diff that - ensures positions align with HTML
+				progress.report({ increment: 20, message: 'Computing diff...' });
+				logDebug('[openPreviewDiff] Computing text diff on rendered HTML content');
+
+				const diffStart = Date.now();
+				const diffComputer = new DiffComputer();
+				const diffHighlighter = new DiffHighlighter();
+
+				// Extract text content from rendered HTML for accurate position mapping
+				const beforeText = diffHighlighter.extractTextFromHtml(beforeResult.html);
+				const afterText = diffHighlighter.extractTextFromHtml(afterResult.html);
+
+				const diffResult = diffComputer.compute(beforeText, afterText);
+				perfMarks.diffComputation = Date.now() - diffStart;
+
+				logInfo(
+					`[openPreviewDiff] Diff computed - ${diffResult.changeCount} changes (${diffResult.addedLines} added, ${diffResult.removedLines} removed)`
+				);
+
 				// **STEP 6.5: Apply diff highlighting** (Epic 3, Story 3.1)
 				progress.report({ increment: 10, message: 'Applying diff highlighting...' });
 				logDebug('[openPreviewDiff] Applying diff highlighting');
 
 				const highlightStart = Date.now();
-				const diffHighlighter = new DiffHighlighter();
 
 				let highlightedResult;
 				try {

@@ -74,12 +74,24 @@ export class DiffHighlighter {
 
 				if (change.type === 'removed') {
 					// Map text position to DOM position in beforeHtml
-					const domStart = beforeMap.textToDom[change.startIndex] + beforeOffset;
-					const domEnd = beforeMap.textToDom[change.endIndex] + beforeOffset;
+					const rawDomStart = beforeMap.textToDom[change.startIndex];
+					const rawDomEnd = beforeMap.textToDom[change.endIndex];
+
+					// Skip if positions are undefined (out of bounds)
+					if (rawDomStart === undefined || rawDomEnd === undefined) {
+						changeIdCounter++;
+						continue;
+					}
+
+					const domStart = rawDomStart + beforeOffset;
+					const domEnd = rawDomEnd + beforeOffset;
 
 					// Inject span in beforeHtml
 					const spanOpen = `<span class="diff-removed" data-change-id="${changeId}">`;
 					const spanClose = `</span>`;
+
+					// Count segments before injection to calculate offset
+					const segmentCount = this.findTextSegments(modifiedBeforeHtml, domStart, domEnd).length;
 
 					modifiedBeforeHtml = this.injectSpanAt(
 						modifiedBeforeHtml,
@@ -89,8 +101,8 @@ export class DiffHighlighter {
 						spanClose
 					);
 
-					// Update offset for next injection
-					beforeOffset += spanOpen.length + spanClose.length;
+					// Update offset based on number of segments wrapped
+					beforeOffset += this.calculateInjectionLength(segmentCount, spanOpen, spanClose);
 
 					// Track change location
 					changeLocations.push({
@@ -103,12 +115,24 @@ export class DiffHighlighter {
 					changeIdCounter++;
 				} else if (change.type === 'added') {
 					// Map text position to DOM position in afterHtml
-					const domStart = afterMap.textToDom[change.startIndex] + afterOffset;
-					const domEnd = afterMap.textToDom[change.endIndex] + afterOffset;
+					const rawDomStart = afterMap.textToDom[change.startIndex];
+					const rawDomEnd = afterMap.textToDom[change.endIndex];
+
+					// Skip if positions are undefined (out of bounds)
+					if (rawDomStart === undefined || rawDomEnd === undefined) {
+						changeIdCounter++;
+						continue;
+					}
+
+					const domStart = rawDomStart + afterOffset;
+					const domEnd = rawDomEnd + afterOffset;
 
 					// Inject span in afterHtml
 					const spanOpen = `<span class="diff-added" data-change-id="${changeId}">`;
 					const spanClose = `</span>`;
+
+					// Count segments before injection to calculate offset
+					const segmentCount = this.findTextSegments(modifiedAfterHtml, domStart, domEnd).length;
 
 					modifiedAfterHtml = this.injectSpanAt(
 						modifiedAfterHtml,
@@ -118,8 +142,8 @@ export class DiffHighlighter {
 						spanClose
 					);
 
-					// Update offset for next injection
-					afterOffset += spanOpen.length + spanClose.length;
+					// Update offset based on number of segments wrapped
+					afterOffset += this.calculateInjectionLength(segmentCount, spanOpen, spanClose);
 
 					// Track change location
 					changeLocations.push({
@@ -149,6 +173,32 @@ export class DiffHighlighter {
 				changeLocations: []
 			};
 		}
+	}
+
+	/**
+	 * Extract plain text from HTML by stripping all tags
+	 * Used to get text content for diffing against rendered HTML
+	 *
+	 * @param html - HTML string to extract text from
+	 * @returns Plain text content without HTML tags
+	 */
+	public extractTextFromHtml(html: string): string {
+		let text = '';
+		let inTag = false;
+
+		for (let i = 0; i < html.length; i++) {
+			const char = html[i];
+
+			if (char === '<') {
+				inTag = true;
+			} else if (char === '>') {
+				inTag = false;
+			} else if (!inTag) {
+				text += char;
+			}
+		}
+
+		return text;
 	}
 
 	/**
@@ -188,17 +238,18 @@ export class DiffHighlighter {
 	}
 
 	/**
-	 * Inject span at specific DOM positions
-	 * Safely inserts opening and closing span tags
+	 * Inject span at specific DOM positions with tag-boundary awareness
+	 * Splits the span into multiple segments to avoid wrapping HTML tags
 	 *
 	 * @param html - HTML string to modify
 	 * @param startPos - DOM start position
 	 * @param endPos - DOM end position
 	 * @param spanOpen - Opening span tag
 	 * @param spanClose - Closing span tag
-	 * @returns Modified HTML with span injected
+	 * @returns Object with modified HTML and the total length added
 	 *
-	 * Note: Gutter markers (AC4) deferred to future enhancement - see AC4 deferral justification in story file
+	 * Instead of wrapping the entire range (which could include
+	 * HTML tags), we identify text-only segments and wrap each separately.
 	 */
 	private injectSpanAt(
 		html: string,
@@ -207,10 +258,98 @@ export class DiffHighlighter {
 		spanOpen: string,
 		spanClose: string
 	): string {
-		const before = html.substring(0, startPos);
-		const content = html.substring(startPos, endPos);
-		const after = html.substring(endPos);
+		// Find all text segments within the range (between HTML tags)
+		const segments = this.findTextSegments(html, startPos, endPos);
 
-		return before + spanOpen + content + spanClose + after;
+		if (segments.length === 0) {
+			// No text content to wrap
+			return html;
+		}
+
+		// Build result by processing segments from end to start
+		// (to avoid position shifts affecting earlier segments)
+		let result = html;
+		for (let i = segments.length - 1; i >= 0; i--) {
+			const seg = segments[i];
+			const before = result.substring(0, seg.start);
+			const content = result.substring(seg.start, seg.end);
+			const after = result.substring(seg.end);
+			result = before + spanOpen + content + spanClose + after;
+		}
+
+		return result;
+	}
+
+	/**
+	 * Find text-only segments within a DOM position range
+	 * Returns array of {start, end} positions that contain only text (no HTML tags)
+	 *
+	 * @param html - HTML string to analyze
+	 * @param startPos - Start position in HTML
+	 * @param endPos - End position in HTML
+	 * @returns Array of text segment positions
+	 */
+	private findTextSegments(
+		html: string,
+		startPos: number,
+		endPos: number
+	): Array<{ start: number; end: number }> {
+		const segments: Array<{ start: number; end: number }> = [];
+		let segmentStart: number | null = null;
+		let inTag = false;
+
+		// Determine if we're starting inside a tag
+		for (let i = 0; i < startPos && i < html.length; i++) {
+			if (html[i] === '<') {
+				inTag = true;
+			} else if (html[i] === '>') {
+				inTag = false;
+			}
+		}
+
+		for (let pos = startPos; pos < endPos && pos < html.length; pos++) {
+			const char = html[pos];
+
+			if (char === '<') {
+				// Entering a tag - close current segment if any
+				if (segmentStart !== null && !inTag) {
+					segments.push({ start: segmentStart, end: pos });
+					segmentStart = null;
+				}
+				inTag = true;
+			} else if (char === '>') {
+				// Exiting a tag
+				inTag = false;
+			} else if (!inTag) {
+				// Text character - start segment if not already in one
+				if (segmentStart === null) {
+					segmentStart = pos;
+				}
+			}
+		}
+
+		// Close final segment if still open
+		if (segmentStart !== null) {
+			segments.push({ start: segmentStart, end: endPos });
+		}
+
+		return segments;
+	}
+
+	/**
+	 * Calculate total length added by span injection
+	 * Used to track offset adjustments
+	 *
+	 * @param segmentCount - Number of text segments wrapped
+	 * @param spanOpen - Opening span tag
+	 * @param spanClose - Closing span tag
+	 * @returns Total characters added
+	 */
+	private calculateInjectionLength(
+		segmentCount: number,
+		spanOpen: string,
+		spanClose: string
+	): number {
+		return segmentCount * (spanOpen.length + spanClose.length);
 	}
 }
