@@ -1,0 +1,133 @@
+{
+  "description": "Relative path fixtures for cross-platform testing",
+  "version": "1.0.0",
+  "paths": {
+    "current_directory": {
+      "description": "Paths relative to current directory",
+      "cases": [
+        {
+          "input": "./image.png",
+          "description": "Simple current directory reference"
+        },
+        {
+          "input": "./images/logo.png",
+          "description": "Current directory with subfolder"
+        },
+        {
+          "input": "./assets/icons/icon.svg",
+          "description": "Nested subfolders"
+        }
+      ]
+    },
+    "parent_directory": {
+      "description": "Paths with parent directory references",
+      "cases": [
+        {
+          "input": "../image.png",
+          "description": "Single parent reference"
+        },
+        {
+          "input": "../images/logo.png",
+          "description": "Parent with subfolder"
+        },
+        {
+          "input": "../../shared/assets/logo.png",
+          "description": "Multiple parent references"
+        }
+      ]
+    },
+    "no_prefix": {
+      "description": "Relative paths without ./ or ../ prefix",
+      "cases": [
+        {
+          "input": "image.png",
+          "description": "Same directory file"
+        },
+        {
+          "input": "images/logo.png",
+          "description": "Subfolder without prefix"
+        },
+        {
+          "input": "assets/icons/icon.svg",
+          "description": "Nested without prefix"
+        }
+      ]
+    },
+    "spaces_and_special": {
+      "description": "Relative paths with spaces and special characters",
+      "cases": [
+        {
+          "input": "./my images/logo.png",
+          "description": "Spaces in folder name"
+        },
+        {
+          "input": "./image-v1.0.png",
+          "description": "Special characters in filename"
+        },
+        {
+          "input": "../assets (1)/logo.png",
+          "description": "Parentheses in folder name"
+        }
+      ]
+    },
+    "unicode": {
+      "description": "Relative paths with Unicode characters",
+      "cases": [
+        {
+          "input": "./图片/logo.png",
+          "description": "Chinese folder name"
+        },
+        {
+          "input": "./Bilder/Bild.png",
+          "description": "German folder name"
+        },
+        {
+          "input": "./画像/アイコン.png",
+          "description": "Japanese path"
+        }
+      ]
+    },
+    "markdown_image_scenarios": {
+      "description": "Common markdown image reference patterns",
+      "base_markdown_path": "/workspace/docs/guide/README.md",
+      "workspace_root": "/workspace",
+      "cases": [
+        {
+          "input": "./screenshot.png",
+          "resolved": "/workspace/docs/guide/screenshot.png",
+          "description": "Image in same directory as markdown"
+        },
+        {
+          "input": "../images/diagram.png",
+          "resolved": "/workspace/docs/images/diagram.png",
+          "description": "Image in sibling folder"
+        },
+        {
+          "input": "../../assets/logo.png",
+          "resolved": "/workspace/assets/logo.png",
+          "description": "Image at project root"
+        },
+        {
+          "input": "images/figure1.png",
+          "resolved": "/workspace/docs/guide/images/figure1.png",
+          "description": "Image in subfolder"
+        }
+      ]
+    },
+    "security": {
+      "description": "Security-sensitive path patterns (should be rejected or handled safely)",
+      "cases": [
+        {
+          "input": "../../../etc/passwd",
+          "description": "Path traversal attempt outside workspace",
+          "should_be_rejected": true
+        },
+        {
+          "input": "....//....//etc/passwd",
+          "description": "Alternative traversal attempt",
+          "should_be_rejected": true
+        }
+      ]
+    }
+  }
+}

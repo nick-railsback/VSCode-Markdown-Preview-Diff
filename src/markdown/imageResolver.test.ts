@@ -7,7 +7,6 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { resolveImagePath, isDataUri, isExternalUrl, isRelativePath } from './imageResolver';
-import * as path from 'path';
 
 // Mock vscode module
 vi.mock('vscode', () => ({
@@ -188,6 +187,39 @@ describe('ImageResolver', () => {
 
 			expect(result).toBeTruthy();
 			expect(result).toContain('file://');
+		});
+
+		it('should handle paths with spaces', () => {
+			const imagePath = './my images/logo.png';
+			const result = resolveImagePath(imagePath, workspaceRoot, markdownFilePath);
+
+			expect(result).toBeTruthy();
+			expect(result).toContain('file://');
+		});
+
+		it('should handle paths with Unicode characters', () => {
+			const imagePath = './图片/image.png';
+			const result = resolveImagePath(imagePath, workspaceRoot, markdownFilePath);
+
+			expect(result).toBeTruthy();
+			expect(result).toContain('file://');
+		});
+
+		it('should handle paths with special characters in filename', () => {
+			const imagePath = './image-v1.0_final.png';
+			const result = resolveImagePath(imagePath, workspaceRoot, markdownFilePath);
+
+			expect(result).toBeTruthy();
+			expect(result).toContain('file://');
+		});
+
+		it('should handle broken images gracefully (returns original path)', () => {
+			// Path outside workspace - should return original path (broken image)
+			const imagePath = '/etc/passwd';
+			const result = resolveImagePath(imagePath, workspaceRoot, markdownFilePath);
+
+			// Should not resolve to file:// URI, should return original
+			expect(result).toBe('/etc/passwd');
 		});
 
 		// Note: Windows backslash paths would be tested on Windows platform

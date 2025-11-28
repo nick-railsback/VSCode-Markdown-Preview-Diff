@@ -12,6 +12,18 @@ For example if there is an image subfolder under your extension project workspac
 
 > Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
+## Keyboard Shortcuts
+
+| Command | macOS | Windows/Linux | Description |
+|---------|-------|---------------|-------------|
+| Open Preview Diff | `Cmd+K D` | `Ctrl+K D` | Opens a rendered diff view for the current markdown file |
+| Next Change | `N` | `N` | Navigate to next change in diff view |
+| Previous Change | `P` | `P` | Navigate to previous change in diff view |
+
+**Note**: The `Cmd+K D` / `Ctrl+K D` shortcut only works when a markdown file is open in the editor. Navigation shortcuts (`N`/`P`) only work when the diff view is focused.
+
+All keybindings can be customized in VS Code's Keyboard Shortcuts settings (`Cmd+K Cmd+S` on macOS or `Ctrl+K Ctrl+S` on Windows/Linux).
+
 ## Requirements
 
 If you have any requirements or dependencies, add a section describing those and how to install and configure them.

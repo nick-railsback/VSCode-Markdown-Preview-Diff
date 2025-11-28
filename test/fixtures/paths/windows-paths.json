@@ -1,0 +1,123 @@
+{
+  "description": "Windows-style path fixtures for cross-platform testing",
+  "version": "1.0.0",
+  "paths": {
+    "standard": {
+      "description": "Standard Windows paths with drive letters",
+      "cases": [
+        {
+          "input": "C:\\Users\\nick\\docs\\file.md",
+          "expected": "file.md",
+          "type": "absolute"
+        },
+        {
+          "input": "C:\\Users\\nick\\project\\src\\extension.ts",
+          "expected": "src\\extension.ts",
+          "type": "absolute"
+        },
+        {
+          "input": "D:\\Projects\\markdown-diff\\README.md",
+          "expected": "README.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "unc": {
+      "description": "UNC network paths",
+      "cases": [
+        {
+          "input": "\\\\server\\share\\docs\\file.md",
+          "expected": "docs\\file.md",
+          "type": "unc"
+        },
+        {
+          "input": "\\\\192.168.1.1\\shared\\project\\src\\main.ts",
+          "expected": "src\\main.ts",
+          "type": "unc"
+        }
+      ]
+    },
+    "spaces": {
+      "description": "Paths containing spaces",
+      "cases": [
+        {
+          "input": "C:\\Users\\John Smith\\Documents\\my file.md",
+          "expected": "my file.md",
+          "type": "absolute"
+        },
+        {
+          "input": "C:\\Program Files\\VS Code\\extensions\\file.md",
+          "expected": "file.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "special_characters": {
+      "description": "Paths with special characters",
+      "cases": [
+        {
+          "input": "C:\\Users\\nick\\docs\\file-v1.0.md",
+          "expected": "file-v1.0.md",
+          "type": "absolute"
+        },
+        {
+          "input": "C:\\Users\\nick\\docs\\file_name.md",
+          "expected": "file_name.md",
+          "type": "absolute"
+        },
+        {
+          "input": "C:\\Users\\nick\\docs\\file(1).md",
+          "expected": "file(1).md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "unicode": {
+      "description": "Paths with Unicode characters",
+      "cases": [
+        {
+          "input": "C:\\Users\\nick\\文档\\readme.md",
+          "expected": "readme.md",
+          "type": "absolute"
+        },
+        {
+          "input": "C:\\Users\\Müller\\Dokumente\\datei.md",
+          "expected": "datei.md",
+          "type": "absolute"
+        },
+        {
+          "input": "C:\\Users\\nick\\日本語\\ファイル.md",
+          "expected": "ファイル.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "deep_nesting": {
+      "description": "Deeply nested directory paths",
+      "cases": [
+        {
+          "input": "C:\\a\\b\\c\\d\\e\\f\\g\\h\\file.md",
+          "expected": "file.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "mixed_separators": {
+      "description": "Paths with mixed forward/back slashes (invalid but common)",
+      "cases": [
+        {
+          "input": "C:\\Users/nick\\docs/file.md",
+          "expected": "file.md",
+          "type": "mixed",
+          "note": "Should be normalized"
+        },
+        {
+          "input": "C:/Users\\nick/docs\\file.md",
+          "expected": "file.md",
+          "type": "mixed",
+          "note": "Should be normalized"
+        }
+      ]
+    }
+  }
+}

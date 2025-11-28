@@ -1,0 +1,152 @@
+{
+  "description": "Unix-style path fixtures for cross-platform testing (Linux/macOS)",
+  "version": "1.0.0",
+  "paths": {
+    "absolute": {
+      "description": "Standard absolute Unix paths",
+      "cases": [
+        {
+          "input": "/home/nick/docs/file.md",
+          "expected": "file.md",
+          "type": "absolute",
+          "platform": "linux"
+        },
+        {
+          "input": "/Users/nick/Documents/project/README.md",
+          "expected": "README.md",
+          "type": "absolute",
+          "platform": "darwin"
+        },
+        {
+          "input": "/var/www/html/index.md",
+          "expected": "index.md",
+          "type": "absolute",
+          "platform": "linux"
+        }
+      ]
+    },
+    "home_directory": {
+      "description": "Paths in user home directories",
+      "cases": [
+        {
+          "input": "/home/nick/project/src/extension.ts",
+          "expected": "src/extension.ts",
+          "type": "absolute",
+          "platform": "linux"
+        },
+        {
+          "input": "/Users/nick/Library/Application Support/Code/User/settings.json",
+          "expected": "settings.json",
+          "type": "absolute",
+          "platform": "darwin"
+        }
+      ]
+    },
+    "spaces": {
+      "description": "Paths containing spaces",
+      "cases": [
+        {
+          "input": "/home/john smith/my documents/my file.md",
+          "expected": "my file.md",
+          "type": "absolute"
+        },
+        {
+          "input": "/Users/nick/Google Drive/Projects/file.md",
+          "expected": "file.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "special_characters": {
+      "description": "Paths with special characters",
+      "cases": [
+        {
+          "input": "/home/nick/docs/file-v1.0.md",
+          "expected": "file-v1.0.md",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/docs/file_name.md",
+          "expected": "file_name.md",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/docs/file(1).md",
+          "expected": "file(1).md",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/docs/file@2x.md",
+          "expected": "file@2x.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "unicode": {
+      "description": "Paths with Unicode characters",
+      "cases": [
+        {
+          "input": "/home/nick/文档/readme.md",
+          "expected": "readme.md",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/müller/dokumente/datei.md",
+          "expected": "datei.md",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/日本語/ファイル.md",
+          "expected": "ファイル.md",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/émoji/🎉.md",
+          "expected": "🎉.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "hidden_files": {
+      "description": "Hidden files and directories (dot-prefixed)",
+      "cases": [
+        {
+          "input": "/home/nick/.config/vscode/settings.json",
+          "expected": "settings.json",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/project/.gitignore",
+          "expected": ".gitignore",
+          "type": "absolute"
+        },
+        {
+          "input": "/home/nick/.hidden/file.md",
+          "expected": "file.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "deep_nesting": {
+      "description": "Deeply nested directory paths",
+      "cases": [
+        {
+          "input": "/a/b/c/d/e/f/g/h/file.md",
+          "expected": "file.md",
+          "type": "absolute"
+        }
+      ]
+    },
+    "symlinks": {
+      "description": "Paths that may involve symlinks (canonical behavior)",
+      "cases": [
+        {
+          "input": "/tmp/project/link/file.md",
+          "expected": "file.md",
+          "type": "absolute",
+          "note": "May be symlinked"
+        }
+      ]
+    }
+  }
+}

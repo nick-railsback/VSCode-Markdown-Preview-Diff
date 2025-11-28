@@ -95,4 +95,37 @@ describe('pathValidator', () => {
 			expect(result).toBe(path.join('docs', 'guides', 'getting-started.md'));
 		});
 	});
+
+	describe('cross-platform path handling', () => {
+		it('should handle paths with spaces', () => {
+			const pathWithSpaces = '/workspace/root/my docs/README.md';
+			const result = validateFilePath(pathWithSpaces, workspaceRoot);
+			expect(result).toBe(path.normalize(pathWithSpaces));
+		});
+
+		it('should handle paths with Unicode characters', () => {
+			const unicodePath = '/workspace/root/文档/readme.md';
+			const result = validateFilePath(unicodePath, workspaceRoot);
+			expect(result).toBe(path.normalize(unicodePath));
+		});
+
+		it('should handle paths with special characters', () => {
+			const specialPath = '/workspace/root/docs/file-name_v1.0.md';
+			const result = validateFilePath(specialPath, workspaceRoot);
+			expect(result).toBe(path.normalize(specialPath));
+		});
+
+		it('should handle deeply nested paths', () => {
+			const deepPath = '/workspace/root/a/b/c/d/e/f/g/h/file.md';
+			const result = validateFilePath(deepPath, workspaceRoot);
+			expect(result).toBe(path.normalize(deepPath));
+		});
+
+		it('should handle current directory references (.)', () => {
+			const dotPath = '/workspace/root/./docs/./README.md';
+			const result = validateFilePath(dotPath, workspaceRoot);
+			// path.normalize should resolve . references
+			expect(result).toBe(path.normalize(dotPath));
+		});
+	});
 });
