@@ -170,10 +170,37 @@
 			diffContainer.style.display = 'flex';
 		}
 
+		// Apply initial highlight style (AC4, Story 5.1)
+		applyHighlightStyle(data.config.highlightStyle);
+
 		// Initialize scroll sync from config (AC7, Story 4.3)
 		// CRITICAL: Must be called AFTER diffContainer.style.display = 'flex'
 		// so that panes have non-zero dimensions for scroll calculations
 		initializeScrollSync(data.config);
+	}
+
+	/**
+	 * Apply highlight style class to diff container (AC4, Story 5.1)
+	 * @param {string} style - 'default' or 'high-contrast'
+	 */
+	function applyHighlightStyle(style) {
+		const diffContainer = document.getElementById('diff-container');
+		if (!diffContainer) {
+			console.warn('[Webview] Cannot apply highlight style: diff container not found');
+			return;
+		}
+
+		// Remove all highlight style classes
+		diffContainer.classList.remove('highlight-style-default', 'highlight-style-high-contrast');
+
+		// Add the appropriate class
+		if (style === 'high-contrast') {
+			diffContainer.classList.add('highlight-style-high-contrast');
+			console.log('[Webview] Applied high-contrast highlight style');
+		} else {
+			diffContainer.classList.add('highlight-style-default');
+			console.log('[Webview] Applied default highlight style');
+		}
 	}
 
 	/**
@@ -213,12 +240,13 @@
 	}
 
 	/**
-	 * Handle updateConfig message for runtime config changes (AC3, AC4)
+	 * Handle updateConfig message for runtime config changes (AC3, AC4, AC6)
 	 * @param {Object} config - Updated configuration
 	 */
 	function handleUpdateConfig(config) {
 		console.log('[Webview] Received config update:', config);
 
+		// Handle syncScroll changes (AC3)
 		if (typeof config.syncScroll === 'boolean' && typeof window.scrollSync !== 'undefined') {
 			if (config.syncScroll) {
 				window.scrollSync.reenableSyncScroll();
@@ -226,6 +254,11 @@
 				window.scrollSync.disableSyncScroll();
 			}
 			console.log('[Webview] Sync scroll updated:', config.syncScroll);
+		}
+
+		// Handle highlightStyle changes (AC4, AC6)
+		if (typeof config.highlightStyle === 'string') {
+			applyHighlightStyle(config.highlightStyle);
 		}
 	}
 

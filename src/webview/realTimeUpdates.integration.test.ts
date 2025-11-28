@@ -10,9 +10,25 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import { ConfigurationService } from '../config/extensionConfig';
 
 // Mock vscode
 vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
 	const mockDisposable = { dispose: vi.fn() };
 	const subscriptions: unknown[] = [];
 
@@ -31,7 +47,13 @@ vi.mock('vscode', () => {
 			asRelativePath: vi.fn(() => 'test.md'),
 			textDocuments: [],
 			getConfiguration: vi.fn(() => ({
-				get: vi.fn().mockReturnValue(true)
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				})
 			}))
 		},
 		window: {
@@ -46,7 +68,12 @@ vi.mock('vscode', () => {
 					return mockDisposable;
 				}),
 				dispose: vi.fn()
-			}))
+			})),
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
 		},
 		commands: {
 			executeCommand: vi.fn()
@@ -59,11 +86,7 @@ vi.mock('vscode', () => {
 				fsPath: `${base}/${paths.join('/')}`
 			}))
 		},
-		EventEmitter: vi.fn().mockImplementation(() => ({
-			event: vi.fn(),
-			fire: vi.fn(),
-			dispose: vi.fn()
-		})),
+		EventEmitter: MockEventEmitter,
 		extensions: {
 			getExtension: vi.fn()
 		}
@@ -106,6 +129,7 @@ describe('Real-Time Updates Integration', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		ConfigurationService.resetInstance();
 
 		mockContext = {
 			extensionUri: { fsPath: '/extension' },
@@ -121,6 +145,7 @@ describe('Real-Time Updates Integration', () => {
 
 	afterEach(() => {
 		WebviewManager.dispose();
+		ConfigurationService.resetInstance();
 	});
 
 	describe('WebviewManager integration with DiffUpdateManager', () => {

@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WebviewManager } from './webviewManager';
+import { ConfigurationService } from '../config/extensionConfig';
 import type { RenderResult } from '../types/webview.types';
 
 // Mock vscode module
@@ -22,38 +23,62 @@ const mockPanel = {
 	dispose: vi.fn(),
 };
 
-vi.mock('vscode', () => ({
-	window: {
-		createWebviewPanel: vi.fn(() => mockPanel),
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-			dispose: vi.fn(),
-		})),
-		showErrorMessage: vi.fn(),
-		showInformationMessage: vi.fn(),
-		showWarningMessage: vi.fn(),
-	},
-	ViewColumn: {
-		One: 1,
-		Two: 2,
-	},
-	Uri: {
-		joinPath: vi.fn((base: any, ...paths: any[]) => ({
-			path: `${base.path}/${paths.join('/')}`,
-		})),
-	},
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn((key: string, defaultValue: any) => defaultValue),
-		})),
-		onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
-	},
-	commands: {
-		executeCommand: vi.fn(),
-	},
-}));
+vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
+	return {
+		window: {
+			createWebviewPanel: vi.fn(() => mockPanel),
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
+			showErrorMessage: vi.fn(),
+			showInformationMessage: vi.fn(),
+			showWarningMessage: vi.fn(),
+		},
+		ViewColumn: {
+			One: 1,
+			Two: 2,
+		},
+		Uri: {
+			joinPath: vi.fn((base: any, ...paths: any[]) => ({
+				path: `${base.path}/${paths.join('/')}`,
+			})),
+		},
+		workspace: {
+			workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+			getConfiguration: vi.fn(() => ({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			})),
+			onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+		},
+		commands: {
+			executeCommand: vi.fn(),
+		},
+		EventEmitter: MockEventEmitter,
+	};
+});
 
 // Mock ContentBuilder
 vi.mock('./contentBuilder', () => ({
@@ -79,6 +104,9 @@ describe('WebviewManager', () => {
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
+
+		// Reset ConfigurationService singleton
+		ConfigurationService.resetInstance();
 
 		// Reset panel mock
 		mockPanel.webview.html = '';
@@ -107,6 +135,7 @@ describe('WebviewManager', () => {
 
 	afterEach(() => {
 		WebviewManager.dispose();
+		ConfigurationService.resetInstance();
 	});
 
 	describe('createDiffPanel', () => {

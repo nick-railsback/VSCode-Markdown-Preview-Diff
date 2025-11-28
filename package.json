@@ -71,8 +71,12 @@
         },
         "markdownPreviewDiff.highlightStyle": {
           "type": "string",
+          "enum": [
+            "default",
+            "high-contrast"
+          ],
           "default": "default",
-          "description": "Color scheme for diff highlighting in the preview."
+          "description": "Color scheme for diff highlighting in the preview. 'default' uses subtle highlighting, 'high-contrast' uses more prominent colors with borders."
         },
         "markdownPreviewDiff.renderTimeout": {
           "type": "number",

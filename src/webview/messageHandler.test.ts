@@ -3,37 +3,58 @@
  * Tests message routing between extension and webview
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MessageHandler } from './messageHandler';
+import { ConfigurationService } from '../config/extensionConfig';
 import type { WebviewMessage, ExtensionMessage } from '../types/webview.types';
 
 // Mock vscode module
-vi.mock('vscode', () => ({
-	commands: {
-		executeCommand: vi.fn(),
-	},
-	window: {
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-			dispose: vi.fn(),
-		})),
-		showErrorMessage: vi.fn(),
-		showInformationMessage: vi.fn(),
-		showWarningMessage: vi.fn(),
-	},
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn((key: string, defaultValue: any) => {
-				if (key === 'syncScroll') {
-					return true;
-				}
-				return defaultValue;
-			}),
-		})),
-	},
-}));
+vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
+	return {
+		commands: {
+			executeCommand: vi.fn(),
+		},
+		window: {
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
+			showErrorMessage: vi.fn(),
+			showInformationMessage: vi.fn(),
+			showWarningMessage: vi.fn(),
+		},
+		workspace: {
+			workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+			getConfiguration: vi.fn(() => ({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			})),
+			onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+		},
+		EventEmitter: MockEventEmitter,
+	};
+});
 
 describe('MessageHandler', () => {
 	let mockWebview: any;
@@ -42,6 +63,9 @@ describe('MessageHandler', () => {
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
+
+		// Reset ConfigurationService singleton to ensure test isolation
+		ConfigurationService.resetInstance();
 
 		// Import vscode after mocking
 		const vscode = await import('vscode');
@@ -52,6 +76,10 @@ describe('MessageHandler', () => {
 		};
 
 		messageHandler = new MessageHandler(mockWebview);
+	});
+
+	afterEach(() => {
+		ConfigurationService.resetInstance();
 	});
 
 	describe('handleMessage', () => {

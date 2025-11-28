@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { nextChange } from './nextChange';
 import { prevChange } from './prevChange';
 import { ChangeNavigator } from '../diff/changeNavigator';
+import { ConfigurationService } from '../config/extensionConfig';
 import type { ChangeLocation } from '../types/diff.types';
 
 // Mock panel for WebviewManager
@@ -25,35 +26,59 @@ const mockPanel = {
 };
 
 // Mock vscode
-vi.mock('vscode', () => ({
-	window: {
-		createWebviewPanel: vi.fn(() => mockPanel),
-		showInformationMessage: vi.fn(),
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-			dispose: vi.fn(),
-		})),
-	},
-	ViewColumn: {
-		Two: 2,
-	},
-	Uri: {
-		joinPath: vi.fn((base: any, ...paths: any[]) => ({
-			path: `${base.path}/${paths.join('/')}`,
-		})),
-	},
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn((key: string, defaultValue: any) => defaultValue),
-		})),
-		onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
-	},
-	commands: {
-		executeCommand: vi.fn(),
-	},
-}));
+vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
+	return {
+		window: {
+			createWebviewPanel: vi.fn(() => mockPanel),
+			showInformationMessage: vi.fn(),
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
+		},
+		ViewColumn: {
+			Two: 2,
+		},
+		Uri: {
+			joinPath: vi.fn((base: any, ...paths: any[]) => ({
+				path: `${base.path}/${paths.join('/')}`,
+			})),
+		},
+		workspace: {
+			workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+			getConfiguration: vi.fn(() => ({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			})),
+			onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+		},
+		commands: {
+			executeCommand: vi.fn(),
+		},
+		EventEmitter: MockEventEmitter,
+	};
+});
 
 // Import WebviewManager after mocking vscode
 import { WebviewManager } from '../webview/webviewManager';
@@ -83,6 +108,7 @@ describe('Navigation Integration Tests', () => {
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
+		ConfigurationService.resetInstance();
 
 		// Reset panel mock
 		mockPanel.webview.html = '';
@@ -116,6 +142,7 @@ describe('Navigation Integration Tests', () => {
 
 	afterEach(() => {
 		WebviewManager.dispose();
+		ConfigurationService.resetInstance();
 	});
 
 	describe('AC3 & AC4: End-to-end navigation flow', () => {

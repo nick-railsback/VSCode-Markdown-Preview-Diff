@@ -3,11 +3,12 @@
  * Tests end-to-end webview creation with MarkdownRenderer and DiffComputer
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WebviewManager } from './webviewManager';
 import { ContentBuilder } from './contentBuilder';
 import { MarkdownRenderer } from '../markdown/markdownRenderer';
 import { DiffComputer } from '../diff/diffComputer';
+import { ConfigurationService } from '../config/extensionConfig';
 import type { RenderResult } from '../types/webview.types';
 
 // Mock vscode module
@@ -32,40 +33,64 @@ const mockPanel = {
 	reveal: vi.fn(),
 };
 
-vi.mock('vscode', () => ({
-	window: {
-		createWebviewPanel: vi.fn(() => mockPanel),
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-			dispose: vi.fn(),
-		})),
-		showErrorMessage: vi.fn(),
-		showInformationMessage: vi.fn(),
-		showWarningMessage: vi.fn(),
-	},
-	ViewColumn: {
-		Two: 2,
-	},
-	Uri: {
-		joinPath: vi.fn((base: any, ...paths: any[]) => ({
-			path: `${base.path}/${paths.join('/')}`,
-		})),
-		file: vi.fn((path: string) => ({
-			toString: () => `file://${path}`,
-		})),
-	},
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn((key: string, defaultValue: any) => defaultValue),
-		})),
-		onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
-	},
-	commands: {
-		executeCommand: vi.fn(),
-	},
-}));
+vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
+	return {
+		window: {
+			createWebviewPanel: vi.fn(() => mockPanel),
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
+			showErrorMessage: vi.fn(),
+			showInformationMessage: vi.fn(),
+			showWarningMessage: vi.fn(),
+		},
+		ViewColumn: {
+			Two: 2,
+		},
+		Uri: {
+			joinPath: vi.fn((base: any, ...paths: any[]) => ({
+				path: `${base.path}/${paths.join('/')}`,
+			})),
+			file: vi.fn((path: string) => ({
+				toString: () => `file://${path}`,
+			})),
+		},
+		workspace: {
+			workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+			getConfiguration: vi.fn(() => ({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			})),
+			onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+		},
+		commands: {
+			executeCommand: vi.fn(),
+		},
+		EventEmitter: MockEventEmitter,
+	};
+});
 
 describe('Webview Integration Tests', () => {
 	let mockContext: any;
@@ -74,6 +99,7 @@ describe('Webview Integration Tests', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		ConfigurationService.resetInstance();
 
 		// Reset panel mock
 		mockPanel.webview.html = '';
@@ -88,6 +114,11 @@ describe('Webview Integration Tests', () => {
 
 		// Clean up any previous panels
 		WebviewManager.dispose();
+	});
+
+	afterEach(() => {
+		WebviewManager.dispose();
+		ConfigurationService.resetInstance();
 	});
 
 	describe('End-to-end webview creation with markdown rendering', () => {

@@ -96,3 +96,46 @@
 	outline-color: var(--vscode-gitDecoration-deletedResourceForeground, #ab5656);
 	box-shadow: 0 0 8px rgba(171, 86, 86, 0.4);
 }
+
+/* ===========================================
+ * High-Contrast Highlight Style (AC4, FR44)
+ * Applied when markdownPreviewDiff.highlightStyle = "high-contrast"
+ * More prominent colors with borders for accessibility
+ * =========================================== */
+
+/* High-contrast body class applied to diff container */
+.highlight-style-high-contrast .diff-added {
+	/* Stronger green background (0.4 opacity vs 0.2 default) */
+	background-color: rgba(0, 200, 0, 0.4);
+	/* Solid 2px border for visibility */
+	border: 2px solid rgb(0, 180, 0);
+	border-radius: 3px;
+	padding: 0 2px;
+}
+
+.highlight-style-high-contrast .diff-removed {
+	/* Stronger red background (0.4 opacity vs 0.2 default) */
+	background-color: rgba(200, 0, 0, 0.4);
+	/* Solid 2px border for visibility */
+	border: 2px solid rgb(180, 0, 0);
+	border-radius: 3px;
+	padding: 0 2px;
+	text-decoration: line-through;
+}
+
+/* High-contrast current change highlighting */
+.highlight-style-high-contrast .diff-current {
+	outline: 3px solid var(--vscode-focusBorder, #007acc);
+	outline-offset: 3px;
+	box-shadow: 0 0 12px rgba(0, 122, 204, 0.6);
+}
+
+.highlight-style-high-contrast .diff-current.diff-added {
+	outline-color: rgb(0, 150, 0);
+	box-shadow: 0 0 12px rgba(0, 150, 0, 0.6);
+}
+
+.highlight-style-high-contrast .diff-current.diff-removed {
+	outline-color: rgb(150, 0, 0);
+	box-shadow: 0 0 12px rgba(150, 0, 0, 0.6);
+}

@@ -13,6 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WebviewManager } from './webviewManager';
+import { ConfigurationService } from '../config/extensionConfig';
 import type { RenderResult } from '../types/webview.types';
 
 // Mock panel with message tracking
@@ -37,46 +38,65 @@ const mockPanel = {
 // Track config change callbacks
 let configChangeCallback: ((e: any) => void) | null = null;
 
-vi.mock('vscode', () => ({
-	window: {
-		createWebviewPanel: vi.fn(() => mockPanel),
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-			dispose: vi.fn(),
-		})),
-		showErrorMessage: vi.fn(),
-		showInformationMessage: vi.fn(),
-		showWarningMessage: vi.fn(),
-	},
-	ViewColumn: {
-		One: 1,
-		Two: 2,
-	},
-	Uri: {
-		joinPath: vi.fn((base: any, ...paths: any[]) => ({
-			path: `${base.path}/${paths.join('/')}`,
-		})),
-	},
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn((key: string, defaultValue: any) => {
-				if (key === 'syncScroll') {
-					return true;
-				}
-				return defaultValue;
+vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
+	return {
+		window: {
+			createWebviewPanel: vi.fn(() => mockPanel),
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
+			showErrorMessage: vi.fn(),
+			showInformationMessage: vi.fn(),
+			showWarningMessage: vi.fn(),
+		},
+		ViewColumn: {
+			One: 1,
+			Two: 2,
+		},
+		Uri: {
+			joinPath: vi.fn((base: any, ...paths: any[]) => ({
+				path: `${base.path}/${paths.join('/')}`,
+			})),
+		},
+		workspace: {
+			workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+			getConfiguration: vi.fn(() => ({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			})),
+			onDidChangeConfiguration: vi.fn((callback: any) => {
+				configChangeCallback = callback;
+				return { dispose: vi.fn() };
 			}),
-		})),
-		onDidChangeConfiguration: vi.fn((callback: any) => {
-			configChangeCallback = callback;
-			return { dispose: vi.fn() };
-		}),
-	},
-	commands: {
-		executeCommand: vi.fn(),
-	},
-}));
+		},
+		commands: {
+			executeCommand: vi.fn(),
+		},
+		EventEmitter: MockEventEmitter,
+	};
+});
 
 // Mock ContentBuilder
 vi.mock('./contentBuilder', () => ({
@@ -91,6 +111,7 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		ConfigurationService.resetInstance();
 		postMessageCalls.length = 0;
 		configChangeCallback = null;
 
@@ -118,6 +139,7 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 
 	afterEach(() => {
 		WebviewManager.dispose();
+		ConfigurationService.resetInstance();
 	});
 
 	describe('AC3: Configuration setting for sync scroll', () => {
@@ -150,16 +172,7 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 		it('should send updateConfig message when syncScroll changes', async () => {
 			const vscode = await import('vscode');
 
-			// Mock config to return false for syncScroll
-			(vscode.workspace.getConfiguration as any).mockReturnValue({
-				get: vi.fn((key: string, defaultValue: any) => {
-					if (key === 'syncScroll') {
-						return false;
-					}
-					return defaultValue;
-				}),
-			});
-
+			// Create panel with initial config (syncScroll: true from mock defaults)
 			WebviewManager.createDiffPanel(mockContext, renderResult);
 
 			// Simulate webview ready
@@ -169,10 +182,24 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 			// Clear previous messages
 			postMessageCalls.length = 0;
 
-			// Simulate config change event
+			// Mock config to return false for syncScroll BEFORE triggering change
+			(vscode.workspace.getConfiguration as any).mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') {
+						return false;
+					}
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			});
+
+			// Simulate config change event - use section name that ConfigurationService checks
 			expect(configChangeCallback).not.toBeNull();
 			configChangeCallback!({
-				affectsConfiguration: (section: string) => section === 'markdownPreviewDiff.syncScroll',
+				affectsConfiguration: (section: string) =>
+					section === 'markdownPreviewDiff' || section.startsWith('markdownPreviewDiff.'),
 			});
 
 			// Check that updateConfig message was sent
@@ -247,24 +274,26 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 
 	describe('Config listener cleanup', () => {
 		it('should dispose config listener when panel is disposed', async () => {
-			const vscode = await import('vscode');
-
 			WebviewManager.createDiffPanel(mockContext, renderResult);
 
 			// Get the dispose callback
 			const disposeCallback = mockPanel.onDidDispose.mock.calls[0][0];
 
+			// Verify panel is active
+			expect(WebviewManager.hasActivePanel()).toBe(true);
+
 			// Dispose the panel
 			disposeCallback();
 
-			// Creating a new panel should register a new listener
-			const initialCallCount = (vscode.workspace.onDidChangeConfiguration as any).mock.calls.length;
+			// Panel should be cleaned up
+			expect(WebviewManager.hasActivePanel()).toBe(false);
 
+			// Creating a new panel should work without issues
+			// (config listener cleanup happens through ConfigurationService)
 			WebviewManager.createDiffPanel(mockContext, renderResult);
 
-			expect((vscode.workspace.onDidChangeConfiguration as any).mock.calls.length).toBe(
-				initialCallCount + 1
-			);
+			// New panel should be active
+			expect(WebviewManager.hasActivePanel()).toBe(true);
 		});
 	});
 });

@@ -9,6 +9,7 @@ import { ContentBuilder } from './contentBuilder';
 import { MessageHandler } from './messageHandler';
 import { ChangeNavigator } from '../diff/changeNavigator';
 import { DiffUpdateManager } from './diffUpdateManager';
+import { ConfigurationService } from '../config/extensionConfig';
 import { logDebug, logInfo } from '../utils/errorHandler';
 
 export class WebviewManager {
@@ -26,12 +27,14 @@ export class WebviewManager {
 	 * @param renderResult - Rendered diff content
 	 * @param changeNavigator - Optional ChangeNavigator for navigation commands
 	 * @param filePath - Path to tracked file for real-time updates (Story 4.5)
+	 * @param comparisonTarget - Comparison target for panel title (Story 5.1, AC2)
 	 */
 	public static createDiffPanel(
 		context: vscode.ExtensionContext,
 		renderResult: RenderResult,
 		changeNavigator?: ChangeNavigator,
-		filePath?: string
+		filePath?: string,
+		comparisonTarget: 'HEAD' | 'staged' = 'HEAD'
 	): void {
 		logDebug('WebviewManager: Creating diff panel');
 
@@ -61,10 +64,11 @@ export class WebviewManager {
 		// Store change navigator for navigation commands
 		WebviewManager.changeNavigator = changeNavigator;
 
-		// Create webview panel
+		// Create webview panel with dynamic title based on comparison target (AC2)
+		const panelTitle = `Markdown Preview Diff: ${comparisonTarget} vs Working`;
 		const panel = vscode.window.createWebviewPanel(
 			'markdownPreviewDiff',
-			'Markdown Preview Diff: HEAD vs Working',
+			panelTitle,
 			vscode.ViewColumn.Two,
 			{
 				enableScripts: true,
@@ -96,15 +100,16 @@ export class WebviewManager {
 			context.subscriptions
 		);
 
-		// Listen for configuration changes (AC4: runtime config updates)
-		WebviewManager.configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration('markdownPreviewDiff.syncScroll')) {
-				const config = vscode.workspace.getConfiguration('markdownPreviewDiff');
-				const syncScroll = config.get<boolean>('syncScroll', true);
-				logDebug(`WebviewManager: syncScroll config changed to ${syncScroll}`);
-				if (WebviewManager.messageHandler) {
-					WebviewManager.messageHandler.updateSyncScroll(syncScroll);
-				}
+		// Listen for configuration changes via ConfigurationService (AC6: runtime config updates)
+		const configService = ConfigurationService.getInstance();
+		WebviewManager.configChangeDisposable = configService.onDidChangeConfiguration((config) => {
+			logDebug(`WebviewManager: Configuration changed - syncScroll: ${config.syncScroll}, highlightStyle: ${config.highlightStyle}`);
+			if (WebviewManager.messageHandler) {
+				// Send all webview-relevant config updates
+				WebviewManager.messageHandler.updateConfig({
+					syncScroll: config.syncScroll,
+					highlightStyle: config.highlightStyle,
+				});
 			}
 		});
 		context.subscriptions.push(WebviewManager.configChangeDisposable);

@@ -5,42 +5,76 @@
  * Coverage target: > 90% per Story 2.2 requirements.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MarkdownRenderer } from './markdownRenderer';
+import { ConfigurationService } from '../config/extensionConfig';
 import { RenderOptions } from '../types/markdown.types';
 
 // Mock vscode module
-vi.mock('vscode', () => ({
-	Uri: {
-		file: (filePath: string) => ({
-			toString: () => `file://${filePath}`,
-		}),
-	},
-	window: {
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-			dispose: vi.fn(),
-		})),
-		showErrorMessage: vi.fn(),
-		showInformationMessage: vi.fn(),
-		showWarningMessage: vi.fn(),
-	},
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
-	},
-}));
+vi.mock('vscode', () => {
+	// EventEmitter class must be inside the factory function (vi.mock is hoisted)
+	class MockEventEmitter<T> {
+		private listeners: ((data: T) => void)[] = [];
+		event = (listener: (data: T) => void) => {
+			this.listeners.push(listener);
+			return { dispose: () => {} };
+		};
+		fire(data: T) {
+			this.listeners.forEach(l => l(data));
+		}
+		dispose() {
+			this.listeners = [];
+		}
+	}
+
+	return {
+		Uri: {
+			file: (filePath: string) => ({
+				toString: () => `file://${filePath}`,
+			}),
+		},
+		window: {
+			createOutputChannel: vi.fn(() => ({
+				appendLine: vi.fn(),
+				show: vi.fn(),
+				dispose: vi.fn(),
+			})),
+			showErrorMessage: vi.fn(),
+			showInformationMessage: vi.fn(),
+			showWarningMessage: vi.fn(),
+		},
+		workspace: {
+			workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+			getConfiguration: vi.fn(() => ({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === 'syncScroll') return true;
+					if (key === 'highlightStyle') return 'default';
+					if (key === 'defaultComparisonTarget') return 'HEAD';
+					if (key === 'renderTimeout') return 5000;
+					return defaultValue;
+				}),
+			})),
+			onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+		},
+		EventEmitter: MockEventEmitter,
+	};
+});
 
 describe('MarkdownRenderer', () => {
 	let renderer: MarkdownRenderer;
 	let renderOptions: RenderOptions;
 
 	beforeEach(() => {
+		ConfigurationService.resetInstance();
 		renderer = new MarkdownRenderer();
 		renderOptions = {
 			workspaceRoot: '/workspace',
 			markdownFilePath: '/workspace/docs/readme.md',
 		};
+	});
+
+	afterEach(() => {
+		ConfigurationService.resetInstance();
 	});
 
 	describe('Basic markdown rendering', () => {

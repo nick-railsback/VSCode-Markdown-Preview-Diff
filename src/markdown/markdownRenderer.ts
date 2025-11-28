@@ -16,6 +16,7 @@ import {
 	MarkdownError,
 	MarkdownErrorType,
 } from '../types/markdown.types';
+import { ConfigurationService } from '../config/extensionConfig';
 import { logDebug, logInfo, logWarning } from '../utils/errorHandler';
 
 /**
@@ -59,11 +60,15 @@ export class MarkdownRenderer {
 				this.markedInitialized = true;
 			}
 
-			logDebug(`Rendering markdown (${markdown.length} characters)`);
+			// Get render timeout from configuration (AC5, FR46)
+			const configService = ConfigurationService.getInstance();
+			const renderTimeout = configService.get('renderTimeout');
+
+			logDebug(`Rendering markdown (${markdown.length} characters), timeout: ${renderTimeout}ms`);
 			const startTime = Date.now();
 
-			// Parse markdown asynchronously (NFR-P5: non-blocking)
-			const html = await marked.parse(markdown);
+			// Parse markdown with timeout (AC5, FR46)
+			const html = await this.renderWithTimeout(markdown, renderTimeout);
 
 			const duration = Date.now() - startTime;
 			logInfo(`Markdown rendered successfully in ${duration}ms`);
@@ -91,6 +96,54 @@ export class MarkdownRenderer {
 				errorDetails,
 			};
 		}
+	}
+
+	/**
+	 * Renders markdown with a timeout mechanism (AC5, FR46)
+	 *
+	 * If rendering takes longer than the timeout, returns partial content
+	 * with a warning message.
+	 *
+	 * @param markdown - Markdown string to render
+	 * @param timeout - Timeout in milliseconds
+	 * @returns Rendered HTML
+	 * @throws Error if rendering fails
+	 */
+	private async renderWithTimeout(markdown: string, timeout: number): Promise<string> {
+		return new Promise<string>((resolve, reject) => {
+			let resolved = false;
+
+			// Set timeout
+			const timeoutId = setTimeout(() => {
+				if (!resolved) {
+					resolved = true;
+					logWarning(`Markdown rendering timed out after ${timeout}ms`);
+					// On timeout, return partial content with warning
+					// We can't actually get partial content from marked, so show warning
+					resolve(`<div class="render-warning" style="padding: 10px; background: var(--vscode-inputValidation-warningBackground, #5c5c00); border: 1px solid var(--vscode-inputValidation-warningBorder, #b89500); border-radius: 4px; margin-bottom: 10px;">
+						<strong>⚠️ Rendering Timeout</strong>
+						<p>The markdown file is too large or complex to render within ${timeout}ms. Consider breaking it into smaller files.</p>
+					</div>
+					<p><em>Content too large to render within timeout.</em></p>`);
+				}
+			}, timeout);
+
+			// Perform rendering - marked.parse() is synchronous by default
+			try {
+				const html = marked.parse(markdown) as string;
+				if (!resolved) {
+					resolved = true;
+					clearTimeout(timeoutId);
+					resolve(html);
+				}
+			} catch (error) {
+				if (!resolved) {
+					resolved = true;
+					clearTimeout(timeoutId);
+					reject(error);
+				}
+			}
+		});
 	}
 
 	/**

@@ -21,6 +21,7 @@ import { ChangeNavigator } from '../diff/changeNavigator';
 import { WebviewManager } from '../webview/webviewManager';
 import { RenderResult } from '../types/webview.types';
 import { GitError } from '../types/git.types';
+import { ConfigurationService } from '../config/extensionConfig';
 import { logDebug, logInfo, logError, logPerformance, logPerformanceWarning, logWarning } from '../utils/errorHandler';
 
 /**
@@ -72,18 +73,27 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 			async (progress) => {
 				// **STEP 3: Retrieve file versions in parallel** (Task 3, NFR-P5)
 				progress.report({ increment: 20, message: 'Retrieving file versions...' });
-				logDebug('[openPreviewDiff] Retrieving HEAD and working versions');
+
+				// Get comparison target from configuration (AC2, FR43)
+				const configService = ConfigurationService.getInstance();
+				const comparisonTarget = configService.get('defaultComparisonTarget');
+				logDebug(`[openPreviewDiff] Retrieving ${comparisonTarget} and working versions`);
 
 				const gitStart = Date.now();
-				const [headVersion, workingVersion] = await Promise.all([
-					gitService.getHeadVersion(filePath),
+				// Get base version based on comparison target setting
+				const baseVersionPromise = comparisonTarget === 'staged'
+					? gitService.getStagedVersion(filePath)
+					: gitService.getHeadVersion(filePath);
+
+				const [baseVersion, workingVersion] = await Promise.all([
+					baseVersionPromise,
 					Promise.resolve(document.getText()) // Get working version from active editor
 				]);
 				perfMarks.gitRetrieval = Date.now() - gitStart;
 
-				const beforeContent = headVersion ?? ''; // New file: use empty string (FR42)
+				const beforeContent = baseVersion ?? ''; // New file: use empty string (FR42)
 				logInfo(
-					`[openPreviewDiff] Retrieved versions - HEAD: ${beforeContent.length} chars, Working: ${workingVersion.length} chars`
+					`[openPreviewDiff] Retrieved versions - ${comparisonTarget}: ${beforeContent.length} chars, Working: ${workingVersion.length} chars`
 				);
 
 				// **STEP 3.5: Check file size and warn for large files** (FR57, Task 7)
@@ -217,8 +227,8 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				logDebug('[openPreviewDiff] Creating webview panel');
 
 				const webviewStart = Date.now();
-				// Pass changeNavigator and filePath to WebviewManager for Epic 4 navigation and Story 4.5 real-time updates
-				WebviewManager.createDiffPanel(context, renderResult, changeNavigator, filePath);
+				// Pass changeNavigator, filePath, and comparisonTarget to WebviewManager for Epic 4 navigation, Story 4.5 real-time updates, and Story 5.1 config
+				WebviewManager.createDiffPanel(context, renderResult, changeNavigator, filePath, comparisonTarget);
 				perfMarks.webviewInit = Date.now() - webviewStart;
 
 				// Calculate total time and log all performance metrics

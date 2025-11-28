@@ -4,36 +4,43 @@
  */
 
 import * as vscode from 'vscode';
-import { WebviewMessage, ExtensionMessage, RenderResult } from '../types/webview.types';
+import { WebviewMessage, ExtensionMessage, RenderResult, WebviewConfig } from '../types/webview.types';
+import { ConfigurationService } from '../config/extensionConfig';
 import { logDebug, logInfo, logWarning } from '../utils/errorHandler';
 
 export class MessageHandler {
 	private renderResult: RenderResult | undefined;
-	private syncScrollEnabled: boolean = true;
+	private currentConfig: WebviewConfig;
 
 	constructor(private readonly webview: vscode.Webview) {
-		// Read initial config
-		this.syncScrollEnabled = this.getSyncScrollConfig();
+		// Read initial config from ConfigurationService
+		const configService = ConfigurationService.getInstance();
+		this.currentConfig = {
+			syncScroll: configService.get('syncScroll'),
+			highlightStyle: configService.get('highlightStyle'),
+		};
 	}
 
 	/**
-	 * Read syncScroll config from VS Code settings (AC3)
+	 * Update configuration and notify webview (AC6)
+	 * @param config - Partial config to update
 	 */
-	private getSyncScrollConfig(): boolean {
-		const config = vscode.workspace.getConfiguration('markdownPreviewDiff');
-		return config.get<boolean>('syncScroll', true);
-	}
-
-	/**
-	 * Update syncScroll setting and notify webview (AC4)
-	 */
-	public updateSyncScroll(enabled: boolean): void {
-		this.syncScrollEnabled = enabled;
+	public updateConfig(config: Partial<WebviewConfig>): void {
+		// Merge with current config
+		this.currentConfig = { ...this.currentConfig, ...config };
 		this.sendMessage({
 			type: 'updateConfig',
-			config: { syncScroll: enabled }
+			config: config
 		});
-		logDebug(`MessageHandler: Updated syncScroll to ${enabled}`);
+		logDebug(`MessageHandler: Updated config - ${JSON.stringify(config)}`);
+	}
+
+	/**
+	 * Update syncScroll setting and notify webview (AC3, AC4)
+	 * @deprecated Use updateConfig instead
+	 */
+	public updateSyncScroll(enabled: boolean): void {
+		this.updateConfig({ syncScroll: enabled });
 	}
 
 	/**
@@ -53,15 +60,12 @@ export class MessageHandler {
 				logInfo('MessageHandler: Webview ready');
 				// Send initialize message with render result and change locations
 				if (this.renderResult) {
-					logDebug(`MessageHandler: Sending initialize with ${this.renderResult.changes.length} changes, syncScroll: ${this.syncScrollEnabled}`);
+					logDebug(`MessageHandler: Sending initialize with ${this.renderResult.changes.length} changes, config: ${JSON.stringify(this.currentConfig)}`);
 					this.sendMessage({
 						type: 'initialize',
 						data: {
 							renderResult: this.renderResult,
-							config: {
-								syncScroll: this.syncScrollEnabled,
-								highlightStyle: 'default'
-							}
+							config: this.currentConfig
 						}
 					});
 				} else {
