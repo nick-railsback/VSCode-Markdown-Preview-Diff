@@ -25,7 +25,55 @@
 		// Hide loading spinner and show content
 		// Content is already injected by ContentBuilder
 		hideLoadingSpinner();
+
+		// Setup toolbar button click handlers (Story 4.4)
+		setupToolbarButtons();
 	});
+
+	/**
+	 * Setup click handlers for toolbar navigation buttons (Story 4.4)
+	 */
+	function setupToolbarButtons() {
+		const prevButton = document.getElementById('prev-change');
+		const nextButton = document.getElementById('next-change');
+
+		if (prevButton) {
+			prevButton.addEventListener('click', () => {
+				if (!prevButton.disabled) {
+					console.log('[Webview] Previous change button clicked');
+					vscode.postMessage({ type: 'prevChange' });
+				}
+			});
+		}
+
+		if (nextButton) {
+			nextButton.addEventListener('click', () => {
+				if (!nextButton.disabled) {
+					console.log('[Webview] Next change button clicked');
+					vscode.postMessage({ type: 'nextChange' });
+				}
+			});
+		}
+	}
+
+	/**
+	 * Enable or disable navigation buttons (Story 4.4 - AC8)
+	 * @param {boolean} enabled - Whether buttons should be enabled
+	 */
+	function setButtonsEnabled(enabled) {
+		const prevButton = document.getElementById('prev-change');
+		const nextButton = document.getElementById('next-change');
+
+		if (prevButton) {
+			prevButton.disabled = !enabled;
+		}
+
+		if (nextButton) {
+			nextButton.disabled = !enabled;
+		}
+
+		console.log('[Webview] Buttons enabled:', enabled);
+	}
 
 	// Listen for messages from extension
 	window.addEventListener('message', (event) => {
@@ -98,8 +146,14 @@
 			changeLocations = data.renderResult.changes;
 			currentChangeIndex = 0;
 			console.log(`[Webview] Loaded ${changeLocations.length} change locations`);
-			// Initialize change counter
+			// Initialize change counter and button state (Story 4.4)
 			updateChangeCounter(0, changeLocations.length);
+			setButtonsEnabled(changeLocations.length > 0);
+		} else {
+			// No changes - disable buttons (AC8)
+			changeLocations = [];
+			updateChangeCounter(0, 0);
+			setButtonsEnabled(false);
 		}
 
 		// Hide loading spinner

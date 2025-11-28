@@ -44,16 +44,45 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 6px 12px;
   background-color: var(--vscode-editorWidget-background, #252526);
   border-bottom: 1px solid var(--vscode-panel-border);
   flex-shrink: 0;
 }
 
+/* Toolbar Buttons (Story 4.4) */
+.toolbar-button {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.toolbar-button:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.toolbar-button:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .change-counter {
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
   font-weight: 500;
+  min-width: 100px;
+  text-align: center;
 }
 
 /* Diff Container */

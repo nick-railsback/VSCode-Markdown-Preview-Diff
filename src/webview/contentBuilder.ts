@@ -58,9 +58,11 @@ export class ContentBuilder {
 		<p>Loading diff...</p>
 	</div>
 
-	<!-- Toolbar with change counter (Epic 4) -->
+	<!-- Toolbar with navigation buttons and change counter (Epic 4) -->
 	<div id="toolbar" class="toolbar">
+		<button id="prev-change" class="toolbar-button" title="Previous Change (p)" aria-label="Previous Change"${renderResult.changes.length === 0 ? ' disabled' : ''}>◀</button>
 		<span id="change-counter" class="change-counter">${renderResult.changes.length > 0 ? `Change 1 of ${renderResult.changes.length}` : 'No changes'}</span>
+		<button id="next-change" class="toolbar-button" title="Next Change (n)" aria-label="Next Change"${renderResult.changes.length === 0 ? ' disabled' : ''}>▶</button>
 	</div>
 
 	<!-- Diff Container (initially hidden) -->

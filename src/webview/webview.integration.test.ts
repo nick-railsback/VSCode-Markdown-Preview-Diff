@@ -324,4 +324,88 @@ describe('Webview Integration Tests', () => {
 			expect(WebviewManager.hasActivePanel()).toBe(true);
 		});
 	});
+
+	// Story 4.4 - Toolbar navigation button integration tests
+	describe('Toolbar navigation buttons integration', () => {
+		it('should render toolbar with navigation buttons when changes exist (AC1, AC2, AC3)', () => {
+			const renderResult: RenderResult = {
+				beforeHtml: '<p>Before</p>',
+				afterHtml: '<p>After</p>',
+				changes: [
+					{ id: 'change-1', beforeOffset: 0, afterOffset: 0 },
+					{ id: 'change-2', beforeOffset: 10, afterOffset: 10 },
+				],
+			};
+
+			WebviewManager.createDiffPanel(mockContext, renderResult);
+
+			const html = mockPanel.webview.html;
+
+			// Verify toolbar structure
+			expect(html).toContain('id="toolbar"');
+			expect(html).toContain('id="prev-change"');
+			expect(html).toContain('id="next-change"');
+			expect(html).toContain('id="change-counter"');
+
+			// Verify button attributes for accessibility (AC2, AC3, AC7)
+			expect(html).toContain('aria-label="Previous Change"');
+			expect(html).toContain('aria-label="Next Change"');
+			expect(html).toContain('title="Previous Change (p)"');
+			expect(html).toContain('title="Next Change (n)"');
+		});
+
+		it('should show correct initial counter with changes (AC4, AC9)', () => {
+			const renderResult: RenderResult = {
+				beforeHtml: '<p>Before</p>',
+				afterHtml: '<p>After</p>',
+				changes: [
+					{ id: 'change-1', beforeOffset: 0, afterOffset: 0 },
+					{ id: 'change-2', beforeOffset: 10, afterOffset: 10 },
+					{ id: 'change-3', beforeOffset: 20, afterOffset: 20 },
+				],
+			};
+
+			WebviewManager.createDiffPanel(mockContext, renderResult);
+
+			const html = mockPanel.webview.html;
+			expect(html).toContain('Change 1 of 3');
+		});
+
+		it('should show "No changes" and disabled buttons when no changes (AC4, AC8)', () => {
+			const renderResult: RenderResult = {
+				beforeHtml: '<p>Before</p>',
+				afterHtml: '<p>After</p>',
+				changes: [],
+			};
+
+			WebviewManager.createDiffPanel(mockContext, renderResult);
+
+			const html = mockPanel.webview.html;
+			expect(html).toContain('No changes');
+
+			// Verify buttons are disabled (AC8)
+			expect(html).toMatch(/id="prev-change"[^>]*disabled/);
+			expect(html).toMatch(/id="next-change"[^>]*disabled/);
+		});
+
+		it('should enable buttons when there are changes (AC9)', () => {
+			const renderResult: RenderResult = {
+				beforeHtml: '<p>Before</p>',
+				afterHtml: '<p>After</p>',
+				changes: [{ id: 'change-1', beforeOffset: 0, afterOffset: 0 }],
+			};
+
+			WebviewManager.createDiffPanel(mockContext, renderResult);
+
+			const html = mockPanel.webview.html;
+
+			// Buttons should NOT have disabled attribute when there are changes
+			const prevButtonMatch = html.match(/<button id="prev-change"[^>]*>/);
+			const nextButtonMatch = html.match(/<button id="next-change"[^>]*>/);
+			expect(prevButtonMatch).toBeTruthy();
+			expect(nextButtonMatch).toBeTruthy();
+			expect(prevButtonMatch![0]).not.toContain('disabled');
+			expect(nextButtonMatch![0]).not.toContain('disabled');
+		});
+	});
 });

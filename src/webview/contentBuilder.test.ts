@@ -187,5 +187,122 @@ describe('ContentBuilder', () => {
 			expect(html).toContain('pane-before');
 			expect(html).toContain('pane-after');
 		});
+
+		// Story 4.4 - Toolbar navigation button tests
+		describe('toolbar navigation buttons', () => {
+			it('should include prev-change button with correct attributes (AC2)', () => {
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					renderResult
+				);
+
+				expect(html).toContain('id="prev-change"');
+				expect(html).toContain('title="Previous Change (p)"');
+				expect(html).toContain('aria-label="Previous Change"');
+			});
+
+			it('should include next-change button with correct attributes (AC3)', () => {
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					renderResult
+				);
+
+				expect(html).toContain('id="next-change"');
+				expect(html).toContain('title="Next Change (n)"');
+				expect(html).toContain('aria-label="Next Change"');
+			});
+
+			it('should include change counter display (AC4)', () => {
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					renderResult
+				);
+
+				expect(html).toContain('id="change-counter"');
+				expect(html).toContain('class="change-counter"');
+			});
+
+			it('should display "No changes" when no changes exist (AC4)', () => {
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					renderResult
+				);
+
+				expect(html).toContain('No changes');
+			});
+
+			it('should display "Change 1 of N" when changes exist (AC4)', () => {
+				const resultWithChanges: RenderResult = {
+					beforeHtml: '<p>Before</p>',
+					afterHtml: '<p>After</p>',
+					changes: [
+						{ id: 'change-1', beforeOffset: 0, afterOffset: 0 },
+						{ id: 'change-2', beforeOffset: 10, afterOffset: 10 },
+						{ id: 'change-3', beforeOffset: 20, afterOffset: 20 },
+					],
+				};
+
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					resultWithChanges
+				);
+
+				expect(html).toContain('Change 1 of 3');
+			});
+
+			it('should disable buttons when no changes exist (AC8)', () => {
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					renderResult
+				);
+
+				// Check for disabled attribute on buttons
+				expect(html).toMatch(/id="prev-change"[^>]*disabled/);
+				expect(html).toMatch(/id="next-change"[^>]*disabled/);
+			});
+
+			it('should enable buttons when changes exist (AC9)', () => {
+				const resultWithChanges: RenderResult = {
+					beforeHtml: '<p>Before</p>',
+					afterHtml: '<p>After</p>',
+					changes: [{ id: 'change-1', beforeOffset: 0, afterOffset: 0 }],
+				};
+
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					resultWithChanges
+				);
+
+				// Buttons should NOT have disabled attribute when there are changes
+				const prevButtonMatch = html.match(/<button id="prev-change"[^>]*>/);
+				const nextButtonMatch = html.match(/<button id="next-change"[^>]*>/);
+				expect(prevButtonMatch).toBeTruthy();
+				expect(nextButtonMatch).toBeTruthy();
+				expect(prevButtonMatch![0]).not.toContain('disabled');
+				expect(nextButtonMatch![0]).not.toContain('disabled');
+			});
+
+			it('should have toolbar in correct DOM order (prev → counter → next) for tab navigation (AC7)', () => {
+				const html = ContentBuilder.buildWebviewHtml(
+					mockWebview as any,
+					mockExtensionUri as any,
+					renderResult
+				);
+
+				const prevIndex = html.indexOf('id="prev-change"');
+				const counterIndex = html.indexOf('id="change-counter"');
+				const nextIndex = html.indexOf('id="next-change"');
+
+				expect(prevIndex).toBeLessThan(counterIndex);
+				expect(counterIndex).toBeLessThan(nextIndex);
+			});
+		});
 	});
 });
