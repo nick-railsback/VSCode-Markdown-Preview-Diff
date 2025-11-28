@@ -152,8 +152,22 @@ describe('ContentBuilder', () => {
 				renderResult
 			);
 
-			// Should be called for: github-markdown.css, layout.css, diff.css, main.js (4 calls)
-			expect(mockWebview.asWebviewUri).toHaveBeenCalledTimes(4);
+			// Should be called for: github-markdown.css, layout.css, diff.css, scrollSync.js, main.js (5 calls)
+			expect(mockWebview.asWebviewUri).toHaveBeenCalledTimes(5);
+		});
+
+		it('should include scrollSync.js script before main.js (Story 4.3)', () => {
+			const html = ContentBuilder.buildWebviewHtml(
+				mockWebview as any,
+				mockExtensionUri as any,
+				renderResult
+			);
+
+			expect(html).toContain('scrollSync.js');
+			// scrollSync.js should be loaded before main.js
+			const scrollSyncIndex = html.indexOf('scrollSync.js');
+			const mainJsIndex = html.indexOf('main.js');
+			expect(scrollSyncIndex).toBeLessThan(mainJsIndex);
 		});
 
 		it('should handle empty HTML content', () => {

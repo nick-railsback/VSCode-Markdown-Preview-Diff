@@ -24,6 +24,14 @@ vi.mock('vscode', () => ({
 	},
 	workspace: {
 		workspaceFolders: [{ uri: { fsPath: '/workspace' } }],
+		getConfiguration: vi.fn(() => ({
+			get: vi.fn((key: string, defaultValue: any) => {
+				if (key === 'syncScroll') {
+					return true;
+				}
+				return defaultValue;
+			}),
+		})),
 	},
 }));
 
@@ -183,6 +191,50 @@ describe('MessageHandler', () => {
 
 			// Should log warning but not throw
 			expect(mockWebview.postMessage).toHaveBeenCalled();
+		});
+	});
+
+	describe('updateSyncScroll (Story 4.3)', () => {
+		it('should send updateConfig message when syncScroll is enabled', () => {
+			messageHandler.updateSyncScroll(true);
+
+			expect(mockWebview.postMessage).toHaveBeenCalledWith({
+				type: 'updateConfig',
+				config: { syncScroll: true }
+			});
+		});
+
+		it('should send updateConfig message when syncScroll is disabled', () => {
+			messageHandler.updateSyncScroll(false);
+
+			expect(mockWebview.postMessage).toHaveBeenCalledWith({
+				type: 'updateConfig',
+				config: { syncScroll: false }
+			});
+		});
+	});
+
+	describe('ready message with syncScroll config (Story 4.3)', () => {
+		it('should send initialize with syncScroll config from settings', () => {
+			const renderResult = {
+				beforeHtml: '<p>Before</p>',
+				afterHtml: '<p>After</p>',
+				changes: []
+			};
+
+			messageHandler.setRenderResult(renderResult);
+			messageHandler.handleMessage({ type: 'ready' });
+
+			expect(mockWebview.postMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: 'initialize',
+					data: expect.objectContaining({
+						config: expect.objectContaining({
+							syncScroll: true
+						})
+					})
+				})
+			);
 		});
 	});
 });

@@ -9,8 +9,32 @@ import { logDebug, logInfo, logWarning } from '../utils/errorHandler';
 
 export class MessageHandler {
 	private renderResult: RenderResult | undefined;
+	private syncScrollEnabled: boolean = true;
 
-	constructor(private readonly webview: vscode.Webview) {}
+	constructor(private readonly webview: vscode.Webview) {
+		// Read initial config
+		this.syncScrollEnabled = this.getSyncScrollConfig();
+	}
+
+	/**
+	 * Read syncScroll config from VS Code settings (AC3)
+	 */
+	private getSyncScrollConfig(): boolean {
+		const config = vscode.workspace.getConfiguration('markdownPreviewDiff');
+		return config.get<boolean>('syncScroll', true);
+	}
+
+	/**
+	 * Update syncScroll setting and notify webview (AC4)
+	 */
+	public updateSyncScroll(enabled: boolean): void {
+		this.syncScrollEnabled = enabled;
+		this.sendMessage({
+			type: 'updateConfig',
+			config: { syncScroll: enabled }
+		});
+		logDebug(`MessageHandler: Updated syncScroll to ${enabled}`);
+	}
 
 	/**
 	 * Set the render result for initialization
@@ -29,13 +53,13 @@ export class MessageHandler {
 				logInfo('MessageHandler: Webview ready');
 				// Send initialize message with render result and change locations
 				if (this.renderResult) {
-					logDebug(`MessageHandler: Sending initialize with ${this.renderResult.changes.length} changes`);
+					logDebug(`MessageHandler: Sending initialize with ${this.renderResult.changes.length} changes, syncScroll: ${this.syncScrollEnabled}`);
 					this.sendMessage({
 						type: 'initialize',
 						data: {
 							renderResult: this.renderResult,
 							config: {
-								syncScroll: true,
+								syncScroll: this.syncScrollEnabled,
 								highlightStyle: 'default'
 							}
 						}

@@ -14,6 +14,9 @@
 	let changeLocations = [];
 	let currentChangeIndex = 0;
 
+	// Scroll sync state (Story 4.3)
+	let scrollSyncInitialized = false;
+
 	// Send ready message on load
 	window.addEventListener('DOMContentLoaded', () => {
 		console.log('[Webview] DOM loaded, sending ready message');
@@ -40,6 +43,10 @@
 
 			case 'navigateToChange':
 				handleNavigateToChange(message.changeIndex);
+				break;
+
+			case 'updateConfig':
+				handleUpdateConfig(message.config);
 				break;
 
 			case 'error':
@@ -103,6 +110,64 @@
 		const diffContainer = document.getElementById('diff-container');
 		if (diffContainer) {
 			diffContainer.style.display = 'flex';
+		}
+
+		// Initialize scroll sync from config (AC7, Story 4.3)
+		// CRITICAL: Must be called AFTER diffContainer.style.display = 'flex'
+		// so that panes have non-zero dimensions for scroll calculations
+		initializeScrollSync(data.config);
+	}
+
+	/**
+	 * Initialize scroll synchronization (Story 4.3)
+	 * @param {Object} config - Configuration object with syncScroll setting
+	 */
+	function initializeScrollSync(config) {
+		if (scrollSyncInitialized) {
+			console.log('[Webview] Scroll sync already initialized');
+			return;
+		}
+
+		// Get pane content elements
+		const beforePane = document.querySelector('.pane-before .pane-content');
+		const afterPane = document.querySelector('.pane-after .pane-content');
+
+		if (!beforePane || !afterPane) {
+			console.warn('[Webview] Cannot initialize scroll sync: pane elements not found');
+			return;
+		}
+
+		// Check if scrollSync module is available (loaded via script tag)
+		if (typeof window.scrollSync === 'undefined') {
+			console.warn('[Webview] scrollSync module not loaded');
+			return;
+		}
+
+		// Initialize the scroll sync module
+		window.scrollSync.initScrollSync(beforePane, afterPane);
+
+		// Apply initial config setting (AC7)
+		const syncScrollEnabled = config && typeof config.syncScroll === 'boolean' ? config.syncScroll : true;
+		window.scrollSync.enableSyncScroll(syncScrollEnabled);
+
+		scrollSyncInitialized = true;
+		console.log('[Webview] Scroll sync initialized, enabled:', syncScrollEnabled);
+	}
+
+	/**
+	 * Handle updateConfig message for runtime config changes (AC3, AC4)
+	 * @param {Object} config - Updated configuration
+	 */
+	function handleUpdateConfig(config) {
+		console.log('[Webview] Received config update:', config);
+
+		if (typeof config.syncScroll === 'boolean' && typeof window.scrollSync !== 'undefined') {
+			if (config.syncScroll) {
+				window.scrollSync.reenableSyncScroll();
+			} else {
+				window.scrollSync.disableSyncScroll();
+			}
+			console.log('[Webview] Sync scroll updated:', config.syncScroll);
 		}
 	}
 
@@ -241,28 +306,6 @@
 		if (diffContainer) {
 			diffContainer.style.display = 'flex';
 		}
-	}
-
-	/**
-	 * Track scroll events (for synchronized scrolling in Epic 4)
-	 */
-	const beforePane = document.querySelector('.pane-before .pane-content');
-	const afterPane = document.querySelector('.pane-after .pane-content');
-
-	if (beforePane) {
-		beforePane.addEventListener('scroll', () => {
-			const position = beforePane.scrollTop;
-			// For now, just track - Epic 4 will implement sync
-			// vscode.postMessage({ type: 'scrolled', position });
-		});
-	}
-
-	if (afterPane) {
-		afterPane.addEventListener('scroll', () => {
-			const position = afterPane.scrollTop;
-			// For now, just track - Epic 4 will implement sync
-			// vscode.postMessage({ type: 'scrolled', position });
-		});
 	}
 
 	// Restore previous state if available

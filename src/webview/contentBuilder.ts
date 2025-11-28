@@ -28,7 +28,10 @@ export class ContentBuilder {
 			vscode.Uri.joinPath(stylesPath, 'diff.css')
 		);
 
-		// Get URI for main script
+		// Get URIs for scripts
+		const scrollSyncUri = webview.asWebviewUri(
+			vscode.Uri.joinPath(extensionUri, 'webview-ui', 'scripts', 'scrollSync.js')
+		);
 		const scriptUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(extensionUri, 'webview-ui', 'scripts', 'main.js')
 		);
@@ -79,6 +82,7 @@ export class ContentBuilder {
 		</div>
 	</div>
 
+	<script nonce="${nonce}" src="${scrollSyncUri}"></script>
 	<script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

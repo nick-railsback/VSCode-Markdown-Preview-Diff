@@ -14,6 +14,7 @@ export class WebviewManager {
 	private static activePanel: vscode.WebviewPanel | undefined;
 	private static messageHandler: MessageHandler | undefined;
 	private static changeNavigator: ChangeNavigator | undefined;
+	private static configChangeDisposable: vscode.Disposable | undefined;
 
 	/**
 	 * Create a new diff panel or reuse existing one
@@ -35,6 +36,12 @@ export class WebviewManager {
 			WebviewManager.activePanel.dispose();
 			WebviewManager.activePanel = undefined;
 			WebviewManager.changeNavigator = undefined;
+		}
+
+		// Dispose previous config listener
+		if (WebviewManager.configChangeDisposable) {
+			WebviewManager.configChangeDisposable.dispose();
+			WebviewManager.configChangeDisposable = undefined;
 		}
 
 		// Store change navigator for navigation commands
@@ -75,6 +82,19 @@ export class WebviewManager {
 			context.subscriptions
 		);
 
+		// Listen for configuration changes (AC4: runtime config updates)
+		WebviewManager.configChangeDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration('markdownPreviewDiff.syncScroll')) {
+				const config = vscode.workspace.getConfiguration('markdownPreviewDiff');
+				const syncScroll = config.get<boolean>('syncScroll', true);
+				logDebug(`WebviewManager: syncScroll config changed to ${syncScroll}`);
+				if (WebviewManager.messageHandler) {
+					WebviewManager.messageHandler.updateSyncScroll(syncScroll);
+				}
+			}
+		});
+		context.subscriptions.push(WebviewManager.configChangeDisposable);
+
 		// Clean up on disposal
 		panel.onDidDispose(
 			() => {
@@ -82,6 +102,11 @@ export class WebviewManager {
 				WebviewManager.activePanel = undefined;
 				WebviewManager.messageHandler = undefined;
 				WebviewManager.changeNavigator = undefined;
+				// Clean up config change listener
+				if (WebviewManager.configChangeDisposable) {
+					WebviewManager.configChangeDisposable.dispose();
+					WebviewManager.configChangeDisposable = undefined;
+				}
 				// Clear context for command availability (AC11)
 				vscode.commands.executeCommand('setContext', 'markdown.previewDiff.panelActive', false);
 			},

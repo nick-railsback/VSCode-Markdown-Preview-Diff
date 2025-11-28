@@ -10,6 +10,7 @@ export type ExtensionMessage =
 	| InitializeMessage
 	| UpdateDiffMessage
 	| NavigateToChangeMessage
+	| UpdateConfigMessage
 	| ErrorMessage;
 
 export interface InitializeMessage {
@@ -25,6 +26,11 @@ export interface UpdateDiffMessage {
 export interface NavigateToChangeMessage {
 	type: 'navigateToChange';
 	changeIndex: number;
+}
+
+export interface UpdateConfigMessage {
+	type: 'updateConfig';
+	config: Partial<WebviewConfig>;
 }
 
 export interface ErrorMessage {
