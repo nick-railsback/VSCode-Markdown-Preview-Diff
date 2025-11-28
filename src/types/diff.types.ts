@@ -14,7 +14,11 @@ export enum ChangeType {
 
 /**
  * Represents a single change in the diff
- * Includes position tracking for precise location mapping
+ * Includes position tracking for precise location mapping in BOTH texts
+ *
+ * Note: Positions are tracked separately because added/removed content
+ * causes the texts to diverge. A 'removed' change exists at a position
+ * in beforeText but not in afterText, and vice versa for 'added'.
  */
 export interface Change {
 	/** Type of change: added, removed, or unchanged */
@@ -23,10 +27,28 @@ export interface Change {
 	/** The text content of this change */
 	value: string;
 
-	/** Starting position in the text (0-indexed) */
+	/** Starting position in the BEFORE text (0-indexed) */
+	beforeStartIndex: number;
+
+	/** Ending position in the BEFORE text (exclusive) */
+	beforeEndIndex: number;
+
+	/** Starting position in the AFTER text (0-indexed) */
+	afterStartIndex: number;
+
+	/** Ending position in the AFTER text (exclusive) */
+	afterEndIndex: number;
+
+	/**
+	 * @deprecated Use beforeStartIndex instead. Kept for backwards compatibility.
+	 * This maps to afterStartIndex for 'added'/'unchanged', beforeStartIndex for 'removed'
+	 */
 	startIndex: number;
 
-	/** Ending position in the text (exclusive) */
+	/**
+	 * @deprecated Use beforeEndIndex instead. Kept for backwards compatibility.
+	 * This maps to afterEndIndex for 'added'/'unchanged', beforeEndIndex for 'removed'
+	 */
 	endIndex: number;
 }
 

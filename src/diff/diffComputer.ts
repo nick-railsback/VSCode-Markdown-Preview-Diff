@@ -49,7 +49,11 @@ export class DiffComputer {
 			});
 
 			// Map diff library output to our Change[] format with position tracking
-			let position = 0;
+			// We track SEPARATE positions for before and after texts because
+			// added/removed content causes the texts to diverge
+			let beforePosition = 0;
+			let afterPosition = 0;
+
 			const mappedChanges: Change[] = diffChanges.map((diffChange) => {
 				// Determine change type
 				const type: ChangeType | 'added' | 'removed' | 'unchanged' = diffChange.added
@@ -58,21 +62,40 @@ export class DiffComputer {
 						? 'removed'
 						: 'unchanged';
 
-				// Position tracking: startIndex at current position
-				const startIndex = position;
-				const endIndex = position + diffChange.value.length;
+				const valueLength = diffChange.value.length;
 
-				// Critical: Only increment position for non-removed changes
-				// Removed changes don't exist in the "after" text, so position stays same
-				if (!diffChange.removed) {
-					position += diffChange.value.length;
+				// Track positions in BOTH texts
+				const beforeStartIndex = beforePosition;
+				const afterStartIndex = afterPosition;
+
+				// 'removed' content exists in before but NOT in after
+				// 'added' content exists in after but NOT in before
+				// 'unchanged' content exists in BOTH
+				if (diffChange.removed) {
+					// Removed: advance before position only
+					beforePosition += valueLength;
+				} else if (diffChange.added) {
+					// Added: advance after position only
+					afterPosition += valueLength;
+				} else {
+					// Unchanged: advance both positions
+					beforePosition += valueLength;
+					afterPosition += valueLength;
 				}
+
+				const beforeEndIndex = beforePosition;
+				const afterEndIndex = afterPosition;
 
 				return {
 					type,
 					value: diffChange.value,
-					startIndex,
-					endIndex
+					beforeStartIndex,
+					beforeEndIndex,
+					afterStartIndex,
+					afterEndIndex,
+					// Deprecated but kept for backwards compatibility
+					startIndex: type === 'removed' ? beforeStartIndex : afterStartIndex,
+					endIndex: type === 'removed' ? beforeEndIndex : afterEndIndex
 				};
 			});
 

@@ -86,7 +86,7 @@
 				break;
 
 			case 'updateDiff':
-				handleUpdateDiff(message.data);
+				handleUpdateDiff(message.data, message.preserveScroll);
 				break;
 
 			case 'navigateToChange':
@@ -95,6 +95,10 @@
 
 			case 'updateConfig':
 				handleUpdateConfig(message.config);
+				break;
+
+			case 'noChanges':
+				handleNoChanges();
 				break;
 
 			case 'error':
@@ -226,10 +230,20 @@
 	}
 
 	/**
-	 * Handle updateDiff message (refresh content)
+	 * Handle updateDiff message (refresh content) - Story 4.5
+	 * @param {Object} data - Render result with beforeHtml, afterHtml, changes
+	 * @param {boolean} preserveScroll - Whether to preserve scroll position (AC7)
 	 */
-	function handleUpdateDiff(data) {
-		console.log('[Webview] Updating diff content');
+	function handleUpdateDiff(data, preserveScroll) {
+		console.log('[Webview] Updating diff content, preserveScroll:', preserveScroll);
+
+		// Capture scroll position before update (AC7)
+		let scrollPercentage = 0;
+		const beforePane = document.querySelector('.pane-before .pane-content');
+		if (preserveScroll && beforePane) {
+			const scrollHeight = beforePane.scrollHeight - beforePane.clientHeight;
+			scrollPercentage = scrollHeight > 0 ? beforePane.scrollTop / scrollHeight : 0;
+		}
 
 		// Update pane content
 		const beforeContent = document.getElementById('before-content');
@@ -243,9 +257,100 @@
 			afterContent.innerHTML = data.afterHtml;
 		}
 
+		// Update change locations and reset navigation (AC1)
+		if (data.changes) {
+			changeLocations = data.changes;
+			currentChangeIndex = 0;
+			updateChangeCounter(0, changeLocations.length);
+			setButtonsEnabled(changeLocations.length > 0);
+			console.log(`[Webview] Updated ${changeLocations.length} change locations`);
+		}
+
+		// Hide "no changes" message if it was showing
+		hideNoChangesMessage();
+
+		// Restore scroll position after DOM update (AC7)
+		if (preserveScroll && beforePane) {
+			requestAnimationFrame(() => {
+				const newScrollHeight = beforePane.scrollHeight - beforePane.clientHeight;
+				beforePane.scrollTop = scrollPercentage * newScrollHeight;
+			});
+		}
+
 		// Update state
 		currentState = { ...currentState, renderResult: data };
 		vscode.setState(currentState);
+	}
+
+	/**
+	 * Handle noChanges message (Story 4.5, AC3, AC4)
+	 * Display "No changes detected" UI when working copy matches HEAD
+	 */
+	function handleNoChanges() {
+		console.log('[Webview] No changes detected');
+
+		// Clear change locations
+		changeLocations = [];
+		currentChangeIndex = 0;
+		updateChangeCounter(0, 0);
+		setButtonsEnabled(false);
+
+		// Show "no changes" message in both panes
+		showNoChangesMessage();
+
+		// Update state
+		currentState = { ...currentState, noChanges: true };
+		vscode.setState(currentState);
+	}
+
+	/**
+	 * Show "No changes detected" message overlay
+	 */
+	function showNoChangesMessage() {
+		// Check if message already exists
+		let noChangesDiv = document.getElementById('no-changes-message');
+
+		if (!noChangesDiv) {
+			noChangesDiv = document.createElement('div');
+			noChangesDiv.id = 'no-changes-message';
+			noChangesDiv.style.cssText = `
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				text-align: center;
+				padding: 20px 40px;
+				background: var(--vscode-editor-background);
+				border: 1px solid var(--vscode-panel-border);
+				border-radius: 8px;
+				z-index: 100;
+				color: var(--vscode-foreground);
+			`;
+			noChangesDiv.innerHTML = `
+				<h3 style="margin: 0 0 10px 0; color: var(--vscode-foreground);">No Changes Detected</h3>
+				<p style="margin: 0; color: var(--vscode-descriptionForeground);">
+					The working file is identical to the committed version.
+				</p>
+			`;
+
+			const diffContainer = document.getElementById('diff-container');
+			if (diffContainer) {
+				diffContainer.style.position = 'relative';
+				diffContainer.appendChild(noChangesDiv);
+			}
+		}
+
+		noChangesDiv.style.display = 'block';
+	}
+
+	/**
+	 * Hide "No changes detected" message
+	 */
+	function hideNoChangesMessage() {
+		const noChangesDiv = document.getElementById('no-changes-message');
+		if (noChangesDiv) {
+			noChangesDiv.style.display = 'none';
+		}
 	}
 
 	/**

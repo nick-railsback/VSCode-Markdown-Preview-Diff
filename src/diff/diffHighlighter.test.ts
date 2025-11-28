@@ -14,6 +14,30 @@ vi.mock('../utils/errorHandler', () => ({
 	logPerformanceWarning: vi.fn()
 }));
 
+/**
+ * Helper to create Change objects with the new dual-position format
+ * For tests, we use actual DiffComputer to get proper positions
+ */
+function makeChange(
+	type: 'added' | 'removed' | 'unchanged',
+	value: string,
+	beforeStart: number,
+	afterStart: number
+): Change {
+	const valueLen = value.length;
+	return {
+		type,
+		value,
+		beforeStartIndex: beforeStart,
+		beforeEndIndex: type === 'added' ? beforeStart : beforeStart + valueLen,
+		afterStartIndex: afterStart,
+		afterEndIndex: type === 'removed' ? afterStart : afterStart + valueLen,
+		// Deprecated but required
+		startIndex: type === 'removed' ? beforeStart : afterStart,
+		endIndex: type === 'removed' ? beforeStart + valueLen : afterStart + valueLen
+	};
+}
+
 describe('DiffHighlighter', () => {
 	let diffHighlighter: DiffHighlighter;
 
@@ -25,9 +49,10 @@ describe('DiffHighlighter', () => {
 		it('should wrap added words with diff-added span', () => {
 			const beforeHtml = '<p>hello</p>';
 			const afterHtml = '<p>hello world</p>';
+			// before: "hello" (5 chars), after: "hello world" (11 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'added', value: 'world', startIndex: 6, endIndex: 11 }
+				makeChange('unchanged', 'hello ', 0, 0),  // both texts have "hello " at start
+				makeChange('added', 'world', 5, 6)        // "world" added at position 6 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -47,9 +72,10 @@ describe('DiffHighlighter', () => {
 		it('should wrap removed words with diff-removed span', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello</p>';
+			// before: "hello world" (11 chars), after: "hello" (5 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 }
+				makeChange('unchanged', 'hello ', 0, 0),  // both texts have "hello "
+				makeChange('removed', 'world', 6, 6)      // "world" removed from position 6 in before
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -69,10 +95,11 @@ describe('DiffHighlighter', () => {
 		it('should highlight only changed words, not entire lines', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
+			// before: "hello world" (11 chars), after: "hello universe" (14 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 },
-				{ type: 'added', value: 'universe', startIndex: 6, endIndex: 14 }
+				makeChange('unchanged', 'hello ', 0, 0),  // position 0-6 in both
+				makeChange('removed', 'world', 6, 6),     // position 6-11 in before, no advance in after
+				makeChange('added', 'universe', 11, 6)    // no advance in before, position 6-14 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -95,9 +122,10 @@ describe('DiffHighlighter', () => {
 		it('should highlight changed content within table cells', () => {
 			const beforeHtml = '<table><tr><td>old</td></tr></table>';
 			const afterHtml = '<table><tr><td>new</td></tr></table>';
+			// before: "old", after: "new" - both 3 chars
 			const changes: Change[] = [
-				{ type: 'removed', value: 'old', startIndex: 0, endIndex: 3 },
-				{ type: 'added', value: 'new', startIndex: 0, endIndex: 3 }
+				makeChange('removed', 'old', 0, 0),  // "old" at position 0 in before
+				makeChange('added', 'new', 3, 0)     // "new" at position 0 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -118,11 +146,12 @@ describe('DiffHighlighter', () => {
 		it('should highlight changed code within code blocks', () => {
 			const beforeHtml = '<pre><code>const x = 1;</code></pre>';
 			const afterHtml = '<pre><code>const x = 2;</code></pre>';
+			// before: "const x = 1;" (12 chars), after: "const x = 2;" (12 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'const x = ', startIndex: 0, endIndex: 10 },
-				{ type: 'removed', value: '1', startIndex: 10, endIndex: 11 },
-				{ type: 'added', value: '2', startIndex: 10, endIndex: 11 },
-				{ type: 'unchanged', value: ';', startIndex: 11, endIndex: 12 }
+				makeChange('unchanged', 'const x = ', 0, 0),  // 0-10 in both
+				makeChange('removed', '1', 10, 10),           // "1" at position 10 in before
+				makeChange('added', '2', 11, 10),             // "2" at position 10 in after
+				makeChange('unchanged', ';', 11, 11)          // ";" at position 11 in both
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -143,10 +172,11 @@ describe('DiffHighlighter', () => {
 		it('should highlight changed content within list items', () => {
 			const beforeHtml = '<ul><li>item one</li></ul>';
 			const afterHtml = '<ul><li>item two</li></ul>';
+			// before: "item one" (8 chars), after: "item two" (8 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'item ', startIndex: 0, endIndex: 5 },
-				{ type: 'removed', value: 'one', startIndex: 5, endIndex: 8 },
-				{ type: 'added', value: 'two', startIndex: 5, endIndex: 8 }
+				makeChange('unchanged', 'item ', 0, 0),  // 0-5 in both
+				makeChange('removed', 'one', 5, 5),      // "one" at position 5 in before
+				makeChange('added', 'two', 8, 5)         // "two" at position 5 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -193,10 +223,11 @@ describe('DiffHighlighter', () => {
 		it('should track change locations with sequential IDs', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
+			// before: "hello world" (11 chars), after: "hello universe" (14 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 },
-				{ type: 'added', value: 'universe', startIndex: 6, endIndex: 14 }
+				makeChange('unchanged', 'hello ', 0, 0),  // 0-6 in both
+				makeChange('removed', 'world', 6, 6),     // 6-11 in before
+				makeChange('added', 'universe', 11, 6)    // 6-14 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -209,10 +240,11 @@ describe('DiffHighlighter', () => {
 		it('should track change locations with correct types', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
+			// before: "hello world" (11 chars), after: "hello universe" (14 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 },
-				{ type: 'added', value: 'universe', startIndex: 6, endIndex: 14 }
+				makeChange('unchanged', 'hello ', 0, 0),
+				makeChange('removed', 'world', 6, 6),
+				makeChange('added', 'universe', 11, 6)
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -224,10 +256,11 @@ describe('DiffHighlighter', () => {
 		it('should track change locations with offsets', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
+			// before: "hello world" (11 chars), after: "hello universe" (14 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 },
-				{ type: 'added', value: 'universe', startIndex: 6, endIndex: 14 }
+				makeChange('unchanged', 'hello ', 0, 0),
+				makeChange('removed', 'world', 6, 6),
+				makeChange('added', 'universe', 11, 6)
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -244,17 +277,21 @@ describe('DiffHighlighter', () => {
 
 	describe('AC14: HTML Injection Safety', () => {
 		it('should preserve HTML entities', () => {
-			const beforeHtml = '<p>hello&nbsp;world</p>';
-			const afterHtml = '<p>hello&nbsp;universe</p>';
+			// Use a simple example where the entity is NOT in the changed region
+			const beforeHtml = '<p>hello&nbsp;world test</p>';
+			const afterHtml = '<p>hello&nbsp;world changed</p>';
+			// Text content: "hello world test" vs "hello world changed"
+			// The &nbsp; entity should be preserved since we're only changing "test" -> "changed"
+			// before: "hello world test" (16 chars), after: "hello world changed" (19 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello world ', startIndex: 0, endIndex: 12 },
-				{ type: 'removed', value: 'world', startIndex: 12, endIndex: 17 },
-				{ type: 'added', value: 'universe', startIndex: 12, endIndex: 20 }
+				makeChange('unchanged', 'hello world ', 0, 0),  // 0-12 in both
+				makeChange('removed', 'test', 12, 12),           // 12-16 in before
+				makeChange('added', 'changed', 16, 12)           // 12-19 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
 
-			// Should preserve &nbsp; entity
+			// Should preserve &nbsp; entity (which is in the unchanged portion)
 			expect(result.beforeHtml).toContain('&nbsp;');
 			expect(result.afterHtml).toContain('&nbsp;');
 		});
@@ -262,11 +299,13 @@ describe('DiffHighlighter', () => {
 		it('should not break with special characters', () => {
 			const beforeHtml = '<p>&lt;script&gt;alert(\'test\')&lt;/script&gt;</p>';
 			const afterHtml = '<p>&lt;script&gt;console.log(\'test\')&lt;/script&gt;</p>';
+			// Text content: "<script>alert('test')</script>" vs "<script>console.log('test')</script>"
+			// before: 30 chars, after: 36 chars
 			const changes: Change[] = [
-				{ type: 'unchanged', value: '<script>', startIndex: 0, endIndex: 8 },
-				{ type: 'removed', value: 'alert', startIndex: 8, endIndex: 13 },
-				{ type: 'added', value: 'console.log', startIndex: 8, endIndex: 19 },
-				{ type: 'unchanged', value: '(\'test\')</script>', startIndex: 13, endIndex: 30 }
+				makeChange('unchanged', '<script>', 0, 0),       // 0-8 in both
+				makeChange('removed', 'alert', 8, 8),            // 8-13 in before
+				makeChange('added', 'console.log', 13, 8),       // 8-19 in after
+				makeChange('unchanged', '(\'test\')</script>', 13, 19)  // 13-30 in before, 19-36 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -283,9 +322,9 @@ describe('DiffHighlighter', () => {
 		it('should return unhighlighted HTML on error', () => {
 			const beforeHtml = '<p>hello</p>';
 			const afterHtml = '<p>world</p>';
-			// Malformed changes that might cause issues
+			// Malformed changes that might cause issues - out of range positions
 			const changes: Change[] = [
-				{ type: 'removed', value: 'hello', startIndex: 10000, endIndex: 10005 } // Out of range
+				makeChange('removed', 'hello', 10000, 10000) // Out of range
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -302,9 +341,10 @@ describe('DiffHighlighter', () => {
 			// Simulating a change that spans from heading into paragraph
 			const beforeHtml = '<h1>Title</h1>';
 			const afterHtml = '<h1>Title</h1><p>New paragraph</p>';
+			// before: "Title" (5 chars), after: "TitleNew paragraph" (18 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'Title', startIndex: 0, endIndex: 5 },
-				{ type: 'added', value: 'New paragraph', startIndex: 5, endIndex: 18 }
+				makeChange('unchanged', 'Title', 0, 0),         // 0-5 in both
+				makeChange('added', 'New paragraph', 5, 5)      // 5-18 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -323,9 +363,10 @@ describe('DiffHighlighter', () => {
 		it('should create multiple spans for text in different HTML elements', () => {
 			const beforeHtml = '<p>old</p>';
 			const afterHtml = '<p>first</p><p>second</p>';
+			// before: "old" (3 chars), after: "firstsecond" (11 chars)
 			const changes: Change[] = [
-				{ type: 'removed', value: 'old', startIndex: 0, endIndex: 3 },
-				{ type: 'added', value: 'firstsecond', startIndex: 0, endIndex: 11 }
+				makeChange('removed', 'old', 0, 0),          // 0-3 in before
+				makeChange('added', 'firstsecond', 3, 0)     // 0-11 in after
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -339,10 +380,11 @@ describe('DiffHighlighter', () => {
 		it('should handle changes within a single element (no tag crossing)', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
+			// before: "hello world" (11 chars), after: "hello universe" (14 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'hello ', startIndex: 0, endIndex: 6 },
-				{ type: 'removed', value: 'world', startIndex: 6, endIndex: 11 },
-				{ type: 'added', value: 'universe', startIndex: 6, endIndex: 14 }
+				makeChange('unchanged', 'hello ', 0, 0),
+				makeChange('removed', 'world', 6, 6),
+				makeChange('added', 'universe', 11, 6)
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -357,9 +399,10 @@ describe('DiffHighlighter', () => {
 		it('should handle large additions spanning heading, paragraph, and list', () => {
 			const beforeHtml = '<h1>Title</h1>';
 			const afterHtml = '<h1>Title</h1><p>Intro text</p><ul><li>Item 1</li><li>Item 2</li></ul>';
+			// before: "Title" (5 chars), after: "TitleIntro textItem 1Item 2" (27 chars)
 			const changes: Change[] = [
-				{ type: 'unchanged', value: 'Title', startIndex: 0, endIndex: 5 },
-				{ type: 'added', value: 'Intro textItem 1Item 2', startIndex: 5, endIndex: 27 }
+				makeChange('unchanged', 'Title', 0, 0),
+				makeChange('added', 'Intro textItem 1Item 2', 5, 5)
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);
@@ -381,8 +424,9 @@ describe('DiffHighlighter', () => {
 		it('should not wrap empty text segments', () => {
 			const beforeHtml = '<p></p>';
 			const afterHtml = '<p></p><p>new</p>';
+			// before: "" (0 chars), after: "new" (3 chars)
 			const changes: Change[] = [
-				{ type: 'added', value: 'new', startIndex: 0, endIndex: 3 }
+				makeChange('added', 'new', 0, 0)
 			];
 
 			const result = diffHighlighter.applyHighlights(beforeHtml, afterHtml, changes);

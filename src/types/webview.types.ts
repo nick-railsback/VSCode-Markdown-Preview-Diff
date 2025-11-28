@@ -11,7 +11,8 @@ export type ExtensionMessage =
 	| UpdateDiffMessage
 	| NavigateToChangeMessage
 	| UpdateConfigMessage
-	| ErrorMessage;
+	| ErrorMessage
+	| NoChangesMessage;
 
 export interface InitializeMessage {
 	type: 'initialize';
@@ -21,6 +22,8 @@ export interface InitializeMessage {
 export interface UpdateDiffMessage {
 	type: 'updateDiff';
 	data: RenderResult;
+	/** When true, webview should preserve scroll position (Story 4.5, AC7) */
+	preserveScroll?: boolean;
 }
 
 export interface NavigateToChangeMessage {
@@ -36,6 +39,14 @@ export interface UpdateConfigMessage {
 export interface ErrorMessage {
 	type: 'error';
 	message: string;
+}
+
+/**
+ * Message sent when no changes are detected (Story 4.5, AC3, AC4)
+ * Displayed after commit/stash when working copy matches HEAD
+ */
+export interface NoChangesMessage {
+	type: 'noChanges';
 }
 
 /**

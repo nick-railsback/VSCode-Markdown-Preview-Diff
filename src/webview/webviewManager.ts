@@ -8,6 +8,7 @@ import { RenderResult } from '../types/webview.types';
 import { ContentBuilder } from './contentBuilder';
 import { MessageHandler } from './messageHandler';
 import { ChangeNavigator } from '../diff/changeNavigator';
+import { DiffUpdateManager } from './diffUpdateManager';
 import { logDebug, logInfo } from '../utils/errorHandler';
 
 export class WebviewManager {
@@ -15,6 +16,8 @@ export class WebviewManager {
 	private static messageHandler: MessageHandler | undefined;
 	private static changeNavigator: ChangeNavigator | undefined;
 	private static configChangeDisposable: vscode.Disposable | undefined;
+	private static diffUpdateManager: DiffUpdateManager | undefined;
+	private static trackedFilePath: string | undefined;
 
 	/**
 	 * Create a new diff panel or reuse existing one
@@ -22,11 +25,13 @@ export class WebviewManager {
 	 * @param context - Extension context
 	 * @param renderResult - Rendered diff content
 	 * @param changeNavigator - Optional ChangeNavigator for navigation commands
+	 * @param filePath - Path to tracked file for real-time updates (Story 4.5)
 	 */
 	public static createDiffPanel(
 		context: vscode.ExtensionContext,
 		renderResult: RenderResult,
-		changeNavigator?: ChangeNavigator
+		changeNavigator?: ChangeNavigator,
+		filePath?: string
 	): void {
 		logDebug('WebviewManager: Creating diff panel');
 
@@ -38,11 +43,20 @@ export class WebviewManager {
 			WebviewManager.changeNavigator = undefined;
 		}
 
+		// Dispose previous DiffUpdateManager (Story 4.5, AC9)
+		if (WebviewManager.diffUpdateManager) {
+			WebviewManager.diffUpdateManager.dispose();
+			WebviewManager.diffUpdateManager = undefined;
+		}
+
 		// Dispose previous config listener
 		if (WebviewManager.configChangeDisposable) {
 			WebviewManager.configChangeDisposable.dispose();
 			WebviewManager.configChangeDisposable = undefined;
 		}
+
+		// Store tracked file path (Story 4.5)
+		WebviewManager.trackedFilePath = filePath;
 
 		// Store change navigator for navigation commands
 		WebviewManager.changeNavigator = changeNavigator;
@@ -95,6 +109,21 @@ export class WebviewManager {
 		});
 		context.subscriptions.push(WebviewManager.configChangeDisposable);
 
+		// Initialize DiffUpdateManager for real-time updates (Story 4.5)
+		if (filePath) {
+			WebviewManager.diffUpdateManager = new DiffUpdateManager(
+				filePath,
+				panel.webview,
+				context,
+				(navigator) => {
+					// Update ChangeNavigator when diff is recomputed
+					WebviewManager.changeNavigator = navigator;
+				}
+			);
+			WebviewManager.diffUpdateManager.initialize();
+			logInfo('WebviewManager: DiffUpdateManager initialized for real-time updates');
+		}
+
 		// Clean up on disposal
 		panel.onDidDispose(
 			() => {
@@ -102,6 +131,12 @@ export class WebviewManager {
 				WebviewManager.activePanel = undefined;
 				WebviewManager.messageHandler = undefined;
 				WebviewManager.changeNavigator = undefined;
+				WebviewManager.trackedFilePath = undefined;
+				// Clean up DiffUpdateManager (Story 4.5, AC9)
+				if (WebviewManager.diffUpdateManager) {
+					WebviewManager.diffUpdateManager.dispose();
+					WebviewManager.diffUpdateManager = undefined;
+				}
 				// Clean up config change listener
 				if (WebviewManager.configChangeDisposable) {
 					WebviewManager.configChangeDisposable.dispose();

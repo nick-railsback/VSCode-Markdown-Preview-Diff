@@ -74,8 +74,9 @@ export class DiffHighlighter {
 
 				if (change.type === 'removed') {
 					// Map text position to DOM position in beforeHtml
-					const rawDomStart = beforeMap.textToDom[change.startIndex];
-					const rawDomEnd = beforeMap.textToDom[change.endIndex];
+					// Use beforeStartIndex/beforeEndIndex for removed content
+					const rawDomStart = beforeMap.textToDom[change.beforeStartIndex];
+					const rawDomEnd = beforeMap.textToDom[change.beforeEndIndex];
 
 					// Skip if positions are undefined (out of bounds)
 					if (rawDomStart === undefined || rawDomEnd === undefined) {
@@ -115,8 +116,9 @@ export class DiffHighlighter {
 					changeIdCounter++;
 				} else if (change.type === 'added') {
 					// Map text position to DOM position in afterHtml
-					const rawDomStart = afterMap.textToDom[change.startIndex];
-					const rawDomEnd = afterMap.textToDom[change.endIndex];
+					// Use afterStartIndex/afterEndIndex for added content
+					const rawDomStart = afterMap.textToDom[change.afterStartIndex];
+					const rawDomEnd = afterMap.textToDom[change.afterEndIndex];
 
 					// Skip if positions are undefined (out of bounds)
 					if (rawDomStart === undefined || rawDomEnd === undefined) {

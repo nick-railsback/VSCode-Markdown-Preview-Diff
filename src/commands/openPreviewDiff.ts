@@ -217,8 +217,8 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				logDebug('[openPreviewDiff] Creating webview panel');
 
 				const webviewStart = Date.now();
-				// Pass changeNavigator to WebviewManager for Epic 4 navigation commands
-				WebviewManager.createDiffPanel(context, renderResult, changeNavigator);
+				// Pass changeNavigator and filePath to WebviewManager for Epic 4 navigation and Story 4.5 real-time updates
+				WebviewManager.createDiffPanel(context, renderResult, changeNavigator, filePath);
 				perfMarks.webviewInit = Date.now() - webviewStart;
 
 				// Calculate total time and log all performance metrics
