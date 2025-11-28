@@ -17,8 +17,9 @@ const mockOutputChannel = {
 vi.mock('vscode', () => ({
 	window: {
 		createOutputChannel: vi.fn(() => mockOutputChannel),
-		showErrorMessage: vi.fn(),
-		showWarningMessage: vi.fn()
+		showErrorMessage: vi.fn(() => Promise.resolve(undefined)),
+		showWarningMessage: vi.fn(() => Promise.resolve(undefined)),
+		showInformationMessage: vi.fn(() => Promise.resolve(undefined))
 	}
 }));
 
@@ -30,6 +31,10 @@ import {
 	logWarning,
 	logDebug,
 	logError,
+	showError,
+	showWarning,
+	showInfo,
+	logErrorWithContext,
 	dispose
 } from '../../../src/utils/errorHandler';
 
@@ -235,6 +240,155 @@ describe('ErrorHandler - Performance Logging', () => {
 			dispose();
 
 			expect(mockOutputChannel.dispose).toHaveBeenCalled();
+		});
+	});
+});
+
+describe('ErrorHandler - AC7 Centralized Error Handler API', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	describe('showError()', () => {
+		it('should show error message to user via vscode.window.showErrorMessage', async () => {
+			const vscode = await import('vscode');
+
+			showError('Test error message');
+
+			expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+				'Test error message',
+				'Show Output'
+			);
+		});
+
+		it('should log error to output channel with timestamp', () => {
+			showError('Test error message');
+
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('[ERROR]')
+			);
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('Test error message')
+			);
+		});
+
+		it('should log details when provided', () => {
+			showError('Test error message', 'Additional error details');
+
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				'Details: Additional error details'
+			);
+		});
+
+		it('should not log details when not provided', () => {
+			showError('Test error message');
+
+			const calls = mockOutputChannel.appendLine.mock.calls;
+			const detailsCalls = calls.filter((call: any[]) => call[0].startsWith('Details:'));
+			expect(detailsCalls.length).toBe(0);
+		});
+	});
+
+	describe('showWarning()', () => {
+		it('should show warning message to user via vscode.window.showWarningMessage', async () => {
+			const vscode = await import('vscode');
+
+			showWarning('Test warning message');
+
+			expect(vscode.window.showWarningMessage).toHaveBeenCalledWith('Test warning message');
+		});
+
+		it('should log warning to output channel with timestamp', () => {
+			showWarning('Test warning message');
+
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('[WARN]')
+			);
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('Test warning message')
+			);
+		});
+
+		it('should log details when provided', () => {
+			showWarning('Test warning message', 'Additional warning details');
+
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				'Details: Additional warning details'
+			);
+		});
+	});
+
+	describe('showInfo()', () => {
+		it('should show information message to user via vscode.window.showInformationMessage', async () => {
+			const vscode = await import('vscode');
+
+			showInfo('Test info message');
+
+			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith('Test info message');
+		});
+
+		it('should NOT log to output channel (info messages are not logged)', () => {
+			vi.clearAllMocks();
+			showInfo('Test info message');
+
+			// showInfo should not call appendLine
+			expect(mockOutputChannel.appendLine).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('logErrorWithContext()', () => {
+		it('should log error to output channel without showing to user', async () => {
+			const vscode = await import('vscode');
+			const error = new Error('Test error');
+
+			logErrorWithContext(error, 'Test context');
+
+			// Should log to output channel
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('[ERROR]')
+			);
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('Test context')
+			);
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('Test error')
+			);
+
+			// Should NOT show to user
+			expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
+		});
+
+		it('should include timestamp in log', () => {
+			const error = new Error('Test error');
+
+			logErrorWithContext(error, 'Test context');
+
+			const calls = mockOutputChannel.appendLine.mock.calls;
+			const errorCall = calls.find((call: any[]) => call[0].includes('[ERROR]'));
+			// Timestamp format: ISO string like 2025-11-28T...
+			expect(errorCall[0]).toMatch(/\[ERROR\] \d{4}-\d{2}-\d{2}T/);
+		});
+
+		it('should include stack trace when available', () => {
+			const error = new Error('Test error with stack');
+
+			logErrorWithContext(error, 'Test context');
+
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('Stack:')
+			);
+		});
+
+		it('should handle errors without stack trace', () => {
+			const error = new Error('Test error');
+			error.stack = undefined;
+
+			logErrorWithContext(error, 'Test context');
+
+			// Should not throw, should still log the error message
+			expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+				expect.stringContaining('Test error')
+			);
 		});
 	});
 });

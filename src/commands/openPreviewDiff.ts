@@ -22,7 +22,7 @@ import { WebviewManager } from '../webview/webviewManager';
 import { RenderResult } from '../types/webview.types';
 import { GitError } from '../types/git.types';
 import { ConfigurationService } from '../config/extensionConfig';
-import { logDebug, logInfo, logError, logPerformance, logPerformanceWarning, logWarning } from '../utils/errorHandler';
+import { logDebug, logInfo, logError, logPerformance, logPerformanceWarning, logWarning, showError, showInfo, showWarning, handleGitError, logErrorWithContext } from '../utils/errorHandler';
 
 /**
  * Main command handler: Markdown: Open Preview Diff
@@ -39,13 +39,13 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 		// **STEP 1: Get active editor and validate** (FR5, Task 2)
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
-			vscode.window.showErrorMessage('No active editor found. Open a markdown file first.');
+			showError('No active editor found. Open a markdown file first.');
 			return;
 		}
 
 		const document = editor.document;
 		if (document.languageId !== 'markdown') {
-			vscode.window.showErrorMessage('This command only works with markdown files.');
+			showError('This command only works with markdown files.');
 			return;
 		}
 
@@ -57,8 +57,10 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 		const isInRepo = await gitService.isInRepository(filePath);
 
 		if (!isInRepo) {
-			vscode.window.showErrorMessage(
-				'This file is not in a git repository. Preview Diff requires git version control.'
+			// AC1 (FR53): Not in git repository error handling via centralized errorHandler
+			showError(
+				'This file is not in a git repository. Preview Diff requires git version control.',
+				`File: ${filePath}`
 			);
 			return;
 		}
@@ -102,17 +104,17 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 
 				if (fileSize > MAX_OPTIMAL_SIZE) {
 					const fileSizeKB = (fileSize / 1024).toFixed(1);
-					vscode.window.showWarningMessage(
-						`Large file detected (${fileSizeKB} KB). Rendering may take longer than usual.`
+					// AC4: Large file handling via centralized errorHandler
+					showWarning(
+						`Large file detected (${fileSizeKB} KB). Rendering may take longer than usual.`,
+						`File: ${filePath}, Size: ${fileSizeKB} KB, Threshold: ${MAX_OPTIMAL_SIZE / 1024} KB`
 					);
-					logWarning(`Processing large file: ${fileSizeKB} KB (threshold: ${MAX_OPTIMAL_SIZE / 1024} KB)`);
 				}
 
-				// **STEP 4: Check if identical** (FR54, Task 4)
+				// **STEP 4: Check if identical** (FR54, AC2, Task 4)
 				if (beforeContent === workingVersion) {
-					vscode.window.showInformationMessage(
-						'No changes detected. The working file is identical to the committed version.'
-					);
+					// AC2: No changes detected info message via centralized errorHandler
+					showInfo('No changes detected. The working file is identical to the committed version.');
 					return;
 				}
 
@@ -139,17 +141,19 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				]);
 				perfMarks.markdownRendering = Date.now() - renderStart;
 
-				// Check for rendering errors (FR55)
+				// Check for rendering errors (FR55, AC3)
 				if (!beforeResult.success) {
-					vscode.window.showErrorMessage(
-						`Failed to render HEAD version. ${beforeResult.error || 'Unknown error'}`
+					showError(
+						`Failed to render markdown. Check file syntax. ${beforeResult.error || 'Unknown error'}`,
+						beforeResult.errorDetails
 					);
 					return;
 				}
 
 				if (!afterResult.success) {
-					vscode.window.showErrorMessage(
-						`Failed to render working version. ${afterResult.error || 'Unknown error'}`
+					showError(
+						`Failed to render markdown. Check file syntax. ${afterResult.error || 'Unknown error'}`,
+						afterResult.errorDetails
 					);
 					return;
 				}
@@ -262,23 +266,22 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 		);
 	} catch (error) {
 		// **Error Handling** (FR53, FR55, FR59, NFR-R1)
+		// Story 5.3: Route all errors through centralized errorHandler
 		if (error instanceof GitError) {
-			// Git-specific error handling (FR59)
-			logError('[openPreviewDiff] Git error', error);
-			vscode.window.showErrorMessage(
-				`Git operation failed: ${error.message}`
-			);
+			// Git-specific error handling via centralized handler (FR53, FR59)
+			handleGitError(error, 'opening preview diff');
 		} else if (error instanceof Error) {
-			// Generic error
-			logError('[openPreviewDiff] Error', error);
-			vscode.window.showErrorMessage(
-				`Failed to open preview diff: ${error.message}`
+			// Generic error via centralized handler
+			showError(
+				`Failed to open preview diff: ${error.message}`,
+				error.stack
 			);
 		} else {
 			// Unknown error
-			logError('[openPreviewDiff] Unknown error', new Error(String(error)));
-			vscode.window.showErrorMessage(
-				'Failed to open preview diff: Unknown error'
+			const unknownError = new Error(String(error));
+			showError(
+				'Failed to open preview diff: Unknown error',
+				unknownError.stack
 			);
 		}
 	}

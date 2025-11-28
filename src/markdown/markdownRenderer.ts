@@ -17,7 +17,7 @@ import {
 	MarkdownErrorType,
 } from '../types/markdown.types';
 import { ConfigurationService } from '../config/extensionConfig';
-import { logDebug, logInfo, logWarning } from '../utils/errorHandler';
+import { logDebug, logInfo, logWarning, showError, logErrorWithContext } from '../utils/errorHandler';
 
 /**
  * MarkdownRenderer class
@@ -78,16 +78,17 @@ export class MarkdownRenderer {
 				html,
 			};
 		} catch (error) {
-			// Rendering failed - return error result (FR55: error message if rendering fails)
+			// Rendering failed - return error result (FR55, AC3: error message if rendering fails)
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			const errorDetails = error instanceof Error ? error.stack : undefined;
 
-			logWarning(`Markdown rendering failed: ${errorMessage}`);
+			// AC3: Log full stack trace to output channel via centralized errorHandler
+			if (error instanceof Error) {
+				logErrorWithContext(error, 'Markdown rendering failed');
+			}
 
-			// Display user-friendly error message (FR55)
-			vscode.window.showErrorMessage(
-				`Failed to render markdown. Check file syntax. ${errorMessage}`
-			);
+			// Note: User message shown via openPreviewDiff command which handles RenderResult
+			// This allows graceful degradation - diff panel doesn't crash
 
 			return {
 				success: false,
@@ -99,10 +100,10 @@ export class MarkdownRenderer {
 	}
 
 	/**
-	 * Renders markdown with a timeout mechanism (AC5, FR46)
+	 * Renders markdown with a timeout mechanism (AC4, FR46)
 	 *
 	 * If rendering takes longer than the timeout, returns partial content
-	 * with a warning message.
+	 * with a warning message per AC4: "File too large or complex. Consider splitting into smaller files."
 	 *
 	 * @param markdown - Markdown string to render
 	 * @param timeout - Timeout in milliseconds
@@ -113,16 +114,22 @@ export class MarkdownRenderer {
 		return new Promise<string>((resolve, reject) => {
 			let resolved = false;
 
-			// Set timeout
+			// Set timeout (AC4: handle timeout with user-friendly message)
 			const timeoutId = setTimeout(() => {
 				if (!resolved) {
 					resolved = true;
+					// AC4: Log timeout via centralized errorHandler
 					logWarning(`Markdown rendering timed out after ${timeout}ms`);
-					// On timeout, return partial content with warning
-					// We can't actually get partial content from marked, so show warning
+					// AC4: Return partial content with warning message and suggested workarounds
 					resolve(`<div class="render-warning" style="padding: 10px; background: var(--vscode-inputValidation-warningBackground, #5c5c00); border: 1px solid var(--vscode-inputValidation-warningBorder, #b89500); border-radius: 4px; margin-bottom: 10px;">
-						<strong>⚠️ Rendering Timeout</strong>
-						<p>The markdown file is too large or complex to render within ${timeout}ms. Consider breaking it into smaller files.</p>
+						<strong>⚠️ File too large or complex</strong>
+						<p>The markdown file could not be rendered within ${timeout}ms. Consider splitting into smaller files.</p>
+						<p><strong>Suggested workarounds:</strong></p>
+						<ul>
+							<li>Split large documents into multiple smaller files</li>
+							<li>Reduce the number of images or complex elements</li>
+							<li>Increase the render timeout in settings (markdownPreviewDiff.renderTimeout)</li>
+						</ul>
 					</div>
 					<p><em>Content too large to render within timeout.</em></p>`);
 				}

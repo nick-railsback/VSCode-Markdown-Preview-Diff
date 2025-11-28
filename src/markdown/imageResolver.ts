@@ -8,7 +8,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { validateFilePath } from '../utils/pathValidator';
-import { logDebug, logWarning } from '../utils/errorHandler';
+import { logDebug, logWarning, logErrorWithContext } from '../utils/errorHandler';
 
 /**
  * Resolves image path for webview display
@@ -64,10 +64,12 @@ export function resolveImagePath(
 			logDebug(`Resolved absolute image path: ${imagePath} -> ${fileUri}`);
 			return fileUri;
 		} catch (error) {
-			// Path validation failed (outside workspace or path traversal)
-			const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-			logWarning(`Invalid absolute image path: ${imagePath}. ${errorMsg}`);
-			// Return original path - will result in broken image (security boundary enforced)
+			// AC5: Path validation failed (outside workspace or path traversal)
+			// Log missing image path to output channel via errorHandler
+			if (error instanceof Error) {
+				logErrorWithContext(error, `Invalid absolute image path: ${imagePath}`);
+			}
+			// Return original path - will result in broken image placeholder (AC5: standard browser broken image icon)
 			return imagePath;
 		}
 	}
@@ -83,10 +85,12 @@ export function resolveImagePath(
 		logDebug(`Resolved relative image path: ${imagePath} -> ${fileUri}`);
 		return fileUri;
 	} catch (error) {
-		// Path resolution or validation failed
-		const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-		logWarning(`Failed to resolve relative image path: ${imagePath}. ${errorMsg}`);
-		// Return original path - will result in broken image (security boundary enforced)
+		// AC5: Path resolution or validation failed - log missing image path via errorHandler
+		if (error instanceof Error) {
+			logErrorWithContext(error, `Failed to resolve image path: ${imagePath} (from ${markdownFilePath})`);
+		}
+		// Return original path - will result in broken image placeholder (AC5: standard browser broken image icon)
+		// AC5: The rest of the markdown renders correctly (no crash)
 		return imagePath;
 	}
 }

@@ -1,8 +1,14 @@
 /**
  * Centralized error handling and user messaging
  *
- * Provides actionable error messages to users per FR59 (git failures) and FR53 (not in repo).
+ * Provides actionable error messages to users per FR53-FR59 (error handling).
  * Implements NFR-R1 (graceful error handling) and NFR-R3 (git failure recovery).
+ *
+ * Story 5.3: Comprehensive Error Handling
+ * - showError(message, details?) - Show error to user and log
+ * - showWarning(message, details?) - Show warning to user and log
+ * - showInfo(message) - Show info to user
+ * - logError(error, context) - Log error without showing to user
  */
 
 import * as vscode from 'vscode';
@@ -16,8 +22,9 @@ let outputChannel: vscode.OutputChannel | null = null;
 
 /**
  * Gets or creates the extension's output channel
+ * Named "Markdown Preview Diff" per AC7
  */
-function getOutputChannel(): vscode.OutputChannel {
+export function getOutputChannel(): vscode.OutputChannel {
 	if (!outputChannel) {
 		outputChannel = vscode.window.createOutputChannel('Markdown Preview Diff');
 	}
@@ -63,34 +70,39 @@ export function handleGitError(error: Error | GitError, context: string): void {
 /**
  * Converts GitError to user-friendly message with troubleshooting guidance
  *
- * Implements FR53, FR59 (actionable error messages).
+ * Implements FR53, FR59, AC6 (actionable error messages with troubleshooting guidance).
  *
  * @param error - GitError to convert
- * @returns User-friendly error message
+ * @returns User-friendly error message with actionable guidance
  */
 function getUserFriendlyMessage(error: GitError): string {
 	switch (error.type) {
 		case GitErrorType.GitNotInstalled:
-			return '⚠️ Git is not installed or not in your PATH. Please install git (https://git-scm.com/) and restart VS Code.';
+			// AC6: "Git is not installed or not in PATH. Please install git and restart VS Code."
+			return 'Git is not installed or not in PATH. Please install git and restart VS Code.';
 
 		case GitErrorType.NotInRepository:
-			return '⚠️ This file is not in a git repository. Preview Diff requires git version control. Initialize a git repository with "git init" or open a folder with an existing repository.';
+			// AC1: "This file is not in a git repository. Preview Diff requires git version control."
+			return 'This file is not in a git repository. Preview Diff requires git version control.';
 
 		case GitErrorType.FileNotFound:
-			return `⚠️ File not found: ${error.message}`;
+			return `File not found: ${error.message}`;
 
 		case GitErrorType.PermissionDenied:
-			return '⚠️ Permission denied accessing git repository. Check file permissions and ensure you have read access to the repository.';
+			// AC6: "Permission denied accessing git repository. Check file permissions."
+			return 'Permission denied accessing git repository. Check file permissions.';
 
 		case GitErrorType.RepositoryCorrupted:
-			return '⚠️ Git repository may be corrupted. Try running "git status" in the terminal to diagnose the issue.';
+			// AC6: "Git operation failed: repository may be corrupted. Try running 'git fsck' to diagnose."
+			return 'Git operation failed: repository may be corrupted. Try running \'git fsck\' to diagnose.';
 
 		case GitErrorType.InvalidPath:
-			return `⚠️ Invalid file path: ${error.message}`;
+			return `Invalid file path: ${error.message}`;
 
 		case GitErrorType.Unknown:
 		default:
-			return `⚠️ Git operation failed: ${error.message}. Check the Output panel for more details.`;
+			// AC6: Include original error message from git for debugging
+			return `Git operation failed: ${error.message}. Check the Output panel for more details.`;
 	}
 }
 
@@ -178,6 +190,88 @@ export function logPerformanceWarning(
 	channel.appendLine(
 		`[Performance Warning] ${operation}: ${durationMs.toFixed(2)}ms (threshold: ${threshold}ms)`
 	);
+}
+
+/**
+ * Shows an error message to the user and logs it to output channel
+ *
+ * Implements AC7: showError(message, details?) - Show error to user and log
+ * All logged errors include timestamp, context, and details.
+ *
+ * @param message - User-friendly error message
+ * @param details - Optional additional details for logging
+ */
+export function showError(message: string, details?: string): void {
+	const channel = getOutputChannel();
+	const timestamp = new Date().toISOString();
+
+	// Log to output channel with timestamp and details
+	channel.appendLine(`[ERROR] ${timestamp} - ${message}`);
+	if (details) {
+		channel.appendLine(`Details: ${details}`);
+	}
+
+	// Show to user with optional "Show Output" button
+	vscode.window.showErrorMessage(message, 'Show Output').then(selection => {
+		if (selection === 'Show Output') {
+			channel.show();
+		}
+	});
+}
+
+/**
+ * Shows a warning message to the user and logs it to output channel
+ *
+ * Implements AC7: showWarning(message, details?) - Show warning to user and log
+ * All logged warnings include timestamp and context.
+ *
+ * @param message - User-friendly warning message
+ * @param details - Optional additional details for logging
+ */
+export function showWarning(message: string, details?: string): void {
+	const channel = getOutputChannel();
+	const timestamp = new Date().toISOString();
+
+	// Log to output channel with timestamp and details
+	channel.appendLine(`[WARN] ${timestamp} - ${message}`);
+	if (details) {
+		channel.appendLine(`Details: ${details}`);
+	}
+
+	// Show warning to user
+	vscode.window.showWarningMessage(message);
+}
+
+/**
+ * Shows an informational message to the user
+ *
+ * Implements AC7: showInfo(message) - Show info to user
+ * Info messages are shown to user but not logged (per typical info message behavior).
+ *
+ * @param message - Informational message
+ */
+export function showInfo(message: string): void {
+	vscode.window.showInformationMessage(message);
+}
+
+/**
+ * Logs an error to the output channel without showing to user
+ *
+ * Implements AC7: logError(error, context) - Log error without showing to user
+ * All logged errors include timestamp, context, and stack trace.
+ *
+ * @param error - Error object
+ * @param context - Context string describing what operation failed
+ */
+export function logErrorWithContext(error: Error, context: string): void {
+	const channel = getOutputChannel();
+	const timestamp = new Date().toISOString();
+
+	channel.appendLine(`[ERROR] ${timestamp} - ${context}`);
+	channel.appendLine(`Error: ${error.message}`);
+	if (error.stack) {
+		channel.appendLine(`Stack: ${error.stack}`);
+	}
 }
 
 /**
