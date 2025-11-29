@@ -3,6 +3,16 @@
   "displayName": "Markdown Preview Diff",
   "description": "GitHub-style markdown preview diff for VS Code - see rendered before/after comparisons without leaving your editor.",
   "version": "0.0.1",
+  "publisher": "PUBLISHER_ID_REQUIRED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nick-railsback/VSCode-Markdown-Preview-Diff.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nick-railsback/VSCode-Markdown-Preview-Diff/issues"
+  },
+  "homepage": "https://github.com/nick-railsback/VSCode-Markdown-Preview-Diff#readme",
   "engines": {
     "vscode": "^1.60.0"
   },
