@@ -289,7 +289,7 @@ Found a bug or have a feature request? Please open an issue on [GitHub](https://
 
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
+[MIT](LICENSE)
 
 ---
 

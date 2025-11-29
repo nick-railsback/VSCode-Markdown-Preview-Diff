@@ -3,7 +3,7 @@
   "displayName": "Markdown Preview Diff",
   "description": "GitHub-style markdown preview diff for VS Code - see rendered before/after comparisons without leaving your editor.",
   "version": "0.0.1",
-  "publisher": "PUBLISHER_ID_REQUIRED",
+  "publisher": "NickRailsback",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,18 +13,31 @@
     "url": "https://github.com/nick-railsback/VSCode-Markdown-Preview-Diff/issues"
   },
   "homepage": "https://github.com/nick-railsback/VSCode-Markdown-Preview-Diff#readme",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.60.0"
   },
   "categories": [
-    "Other",
-    "Formatters"
+    "Visualization",
+    "SCM Providers",
+    "Other"
   ],
   "keywords": [
     "markdown",
     "diff",
     "preview",
-    "git"
+    "git",
+    "comparison",
+    "review",
+    "gfm",
+    "github",
+    "render",
+    "visual",
+    "side-by-side"
   ],
   "activationEvents": [
     "onLanguage:markdown"
@@ -122,7 +135,7 @@
     "@types/marked": "^5.0.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "@types/vscode": "^1.106.1",
+    "@types/vscode": "^1.60.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.0",

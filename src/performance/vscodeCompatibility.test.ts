@@ -1,7 +1,7 @@
 /**
  * VS Code Version Compatibility Tests
  *
- * Tests that the extension works correctly with VS Code 1.60+
+ * Tests that the extension works correctly with VS Code 1.106+
  * and doesn't use deprecated APIs.
  */
 
@@ -15,7 +15,8 @@ describe('VS Code Version Compatibility', () => {
 			const packageJsonPath = join(process.cwd(), 'package.json');
 			const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 
-			// Verify engine requirement
+			// Verify engine requirement - 1.60.0 for broad compatibility
+			// Note: @types/vscode version (1.106.1) is for dev-time type checking only
 			expect(packageJson.engines?.vscode).toBe('^1.60.0');
 		});
 
