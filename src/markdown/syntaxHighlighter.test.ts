@@ -1,8 +1,8 @@
 /**
  * Unit tests for SyntaxHighlighter
  *
- * Tests FR14 (syntax highlighting for 190+ languages) and auto-detection.
- * Coverage target: > 90% per Story 2.2 requirements.
+ * Tests syntax highlighting for 190+ languages) and auto-detection.
+ * Coverage target: > 90%.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';

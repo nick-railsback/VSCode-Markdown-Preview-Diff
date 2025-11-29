@@ -184,7 +184,7 @@ describe('DiffComputer Integration Tests', () => {
 		});
 	});
 
-	describe('Integration Readiness for Story 2.4', () => {
+	describe('Integration Readiness for ', () => {
 		it('should produce DiffResult suitable for webview display', () => {
 			const beforeHTML = '<h1>Before Version</h1>';
 			const afterHTML = '<h1>After Version</h1>';
@@ -206,7 +206,7 @@ describe('DiffComputer Integration Tests', () => {
 				expect(change).toHaveProperty('endIndex');
 			}
 
-			// This DiffResult is ready to be passed to Story 2.4 webview
+			// This DiffResult is ready to be passed to  webview
 		});
 	});
 });

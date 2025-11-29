@@ -2,7 +2,7 @@
  * Git Service - Unified API for git operations
  *
  * Facade pattern implementation that orchestrates RepositoryDetector and FileVersionRetriever.
- * Provides the main public API for git operations per Architecture Document and Epic 2 Tech Spec.
+ * Provides the main public API for git operations.
  */
 
 import { RepositoryDetector } from './repositoryDetector';
@@ -14,8 +14,7 @@ import { getWorkspaceRoot } from '../utils/pathValidator';
  * Main git service providing unified access to repository and file operations
  *
  * This is the primary interface used by other extension components.
- * Implements the Facade pattern per Architecture Document.
- * Implements Singleton pattern for performance (Task 2, Story 2.6).
+ * Implements the Facade pattern and Singleton pattern for performance.
  */
 export class GitService {
 	private static instance: GitService | null = null;
@@ -36,8 +35,7 @@ export class GitService {
 	/**
 	 * Gets the singleton instance of GitService
 	 *
-	 * Implements Task 2 (optimize git operations) via singleton pattern.
-	 * Enables repository caching for 50-100ms improvement per operation.
+	 * Enables repository caching for improved performance.
 	 *
 	 * @returns Singleton GitService instance
 	 */
@@ -89,8 +87,6 @@ export class GitService {
 	/**
 	 * Checks if a file is within a git repository
 	 *
-	 * Implements FR37 (detect git repository) and FR53 (error if not in repo).
-	 *
 	 * @param filePath - Absolute path to file
 	 * @returns true if file is in a git repository, false otherwise
 	 * @throws GitError if initialization fails or git is not installed
@@ -111,7 +107,6 @@ export class GitService {
 	/**
 	 * Gets file content from HEAD commit
 	 *
-	 * Implements FR38 (retrieve HEAD version) and FR42 (handle new uncommitted files).
 	 * Automatically initializes file version retriever if needed.
 	 *
 	 * @param filePath - Absolute path to file
@@ -137,8 +132,6 @@ export class GitService {
 	/**
 	 * Gets file content from staging area
 	 *
-	 * Implements FR39 (retrieve staged version).
-	 *
 	 * @param filePath - Absolute path to file
 	 * @returns File content from staging area, or null if file is not staged
 	 * @throws GitError if not in repository or git operation fails
@@ -161,8 +154,6 @@ export class GitService {
 
 	/**
 	 * Gets current file content from editor or filesystem
-	 *
-	 * Implements FR40 (retrieve working version).
 	 *
 	 * @param filePath - Absolute path to file
 	 * @returns Current file content
@@ -257,7 +248,6 @@ export class GitService {
 	 * Disposes the git service and releases resources
 	 *
 	 * Call this when the extension is deactivated.
-	 * Implements Task 6 (resource cleanup).
 	 */
 	dispose(): void {
 		this.repositoryDetector = null;

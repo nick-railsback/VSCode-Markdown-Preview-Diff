@@ -1,10 +1,8 @@
 /**
  * ConfigurationService - Centralized configuration management
  *
- * Implements Story 5.1: User Configuration Settings
  * Provides typed access to extension settings with change notifications.
- *
- * Follows singleton pattern established by GitService (per architectural patterns).
+ * Follows singleton pattern for consistent configuration access.
  */
 
 import * as vscode from 'vscode';
@@ -15,13 +13,13 @@ import { logDebug, logInfo } from '../utils/errorHandler';
  * Maps to package.json contributes.configuration properties
  */
 export interface ExtensionConfig {
-	/** Version to compare working changes against (FR43) */
+	/** Version to compare working changes against */
 	defaultComparisonTarget: 'HEAD' | 'staged';
-	/** Enable synchronized scrolling between panes (FR45) */
+	/** Enable synchronized scrolling between panes */
 	syncScroll: boolean;
-	/** Color scheme for diff highlighting (FR44) */
+	/** Color scheme for diff highlighting */
 	highlightStyle: 'default' | 'high-contrast';
-	/** Maximum render time in milliseconds (FR46) */
+	/** Maximum render time in milliseconds */
 	renderTimeout: number;
 }
 

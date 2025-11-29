@@ -1,9 +1,6 @@
 /**
  * Resource Cleanup Validation Tests
  *
- * Story 5.4: Validate Performance and Reliability Across Platforms
- * AC5: Resource Cleanup Validation (FR64)
- *
  * These tests validate the cleanup patterns used in the codebase
  * through static analysis rather than runtime mocking.
  */
@@ -12,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-describe('Resource Cleanup Validation (AC5)', () => {
+describe('Resource Cleanup Validation', () => {
 	describe('WebviewManager Disposal Pattern', () => {
 		it('should implement dispose method for panel cleanup', () => {
 			const webviewManagerPath = join(process.cwd(), 'src/webview/webviewManager.ts');
@@ -168,7 +165,7 @@ describe('Resource Cleanup Validation (AC5)', () => {
 	});
 });
 
-describe('Extension Subscriptions Pattern (AC5)', () => {
+describe('Extension Subscriptions Pattern', () => {
 	it('should add disposables to context.subscriptions', () => {
 		const extensionPath = join(process.cwd(), 'src/extension.ts');
 		const content = readFileSync(extensionPath, 'utf-8');
@@ -186,7 +183,7 @@ describe('Extension Subscriptions Pattern (AC5)', () => {
 	});
 });
 
-describe('Memory Management Validation (AC5)', () => {
+describe('Memory Management Validation', () => {
 	it('should use retainContextWhenHidden=false for webview', () => {
 		const webviewManagerPath = join(process.cwd(), 'src/webview/webviewManager.ts');
 		const content = readFileSync(webviewManagerPath, 'utf-8');
@@ -204,7 +201,7 @@ describe('Memory Management Validation (AC5)', () => {
 	});
 });
 
-describe('Cleanup Timing Validation (AC5)', () => {
+describe('Cleanup Timing Validation', () => {
 	it('should use synchronous disposal pattern', () => {
 		const webviewManagerPath = join(process.cwd(), 'src/webview/webviewManager.ts');
 		const content = readFileSync(webviewManagerPath, 'utf-8');

@@ -40,8 +40,7 @@ export class FileVersionRetriever {
 	/**
 	 * Gets file content from HEAD commit
 	 *
-	 * Implements FR38 (retrieve HEAD version) and FR42 (handle new uncommitted files).
-	 * Uses parameterized git commands to prevent injection attacks (NFR-S2).
+	 * Uses parameterized git commands to prevent injection attacks.
 	 *
 	 * @param filePath - Absolute path to file
 	 * @returns File content from HEAD, or null if file doesn't exist in HEAD (new file)
@@ -62,7 +61,7 @@ export class FileVersionRetriever {
 
 			return content;
 		} catch (error) {
-			// Handle new files that don't exist in HEAD (FR42)
+			// Handle new files that don't exist in HEAD
 			if (error instanceof Error &&
 				(error.message.includes('does not exist') ||
 				 error.message.includes('exists on disk, but not in') ||
@@ -106,8 +105,6 @@ export class FileVersionRetriever {
 	/**
 	 * Gets file content from staging area
 	 *
-	 * Implements FR39 (retrieve staged version).
-	 *
 	 * @param filePath - Absolute path to file
 	 * @returns File content from staging area, or null if file is not staged
 	 * @throws GitError if path validation fails or git operation fails unexpectedly
@@ -148,8 +145,7 @@ export class FileVersionRetriever {
 	/**
 	 * Gets current file content from editor or filesystem
 	 *
-	 * Implements FR40 (retrieve working version).
-	 * Uses VS Code workspace API for safe file access (NFR-S1).
+	 * Uses VS Code workspace API for safe file access.
 	 *
 	 * @param filePath - Absolute path to file
 	 * @returns Current file content

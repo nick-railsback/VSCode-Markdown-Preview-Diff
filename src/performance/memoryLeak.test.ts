@@ -2,7 +2,6 @@
  * Memory Leak Detection Tests
  *
  * Tests that verify proper resource cleanup and memory management.
- * Validates AC9-AC13 (memory footprint and resource cleanup).
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -120,7 +119,7 @@ describe('Memory Leak Detection', () => {
 		WebviewManager.dispose();
 	});
 
-	describe('Webview Panel Cleanup (AC10-AC13)', () => {
+	describe('Webview Panel Cleanup', () => {
 		it('should set activePanel to undefined after disposal', () => {
 			// Create panel
 			WebviewManager.createDiffPanel(mockContext, mockRenderResult);
@@ -144,7 +143,7 @@ describe('Memory Leak Detection', () => {
 		});
 	});
 
-	describe('Multiple Open/Close Cycles (AC9)', () => {
+	describe('Multiple Open/Close Cycles', () => {
 		it('should handle 10 open/close cycles without accumulating references', () => {
 			const cycleCount = 10;
 			const initialMemory = process.memoryUsage();
@@ -186,7 +185,7 @@ describe('Memory Leak Detection', () => {
 		});
 	});
 
-	describe('Resource Cleanup Timing (AC10)', () => {
+	describe('Resource Cleanup Timing', () => {
 		it('should complete cleanup within 1 second of disposal', async () => {
 			// Create panel
 			WebviewManager.createDiffPanel(mockContext, mockRenderResult);
@@ -213,7 +212,7 @@ describe('Memory Leak Detection', () => {
 		});
 	});
 
-	describe('Memory Footprint (AC9)', () => {
+	describe('Memory Footprint', () => {
 		it('should maintain reasonable memory usage for single panel', () => {
 			const beforeMemory = process.memoryUsage().heapUsed;
 

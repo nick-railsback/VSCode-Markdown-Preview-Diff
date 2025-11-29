@@ -1,6 +1,5 @@
 /**
  * Unit tests for DiffHighlighter
- * Tests all acceptance criteria: AC1-AC15
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -45,7 +44,7 @@ describe('DiffHighlighter', () => {
 		diffHighlighter = new DiffHighlighter();
 	});
 
-	describe('AC1: Added Content Visual Highlighting', () => {
+	describe('Added Content Visual Highlighting', () => {
 		it('should wrap added words with diff-added span', () => {
 			const beforeHtml = '<p>hello</p>';
 			const afterHtml = '<p>hello world</p>';
@@ -68,7 +67,7 @@ describe('DiffHighlighter', () => {
 		// Note: Gutter markers deferred to future enhancement
 	});
 
-	describe('AC2: Removed Content Visual Highlighting', () => {
+	describe('Removed Content Visual Highlighting', () => {
 		it('should wrap removed words with diff-removed span', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello</p>';
@@ -91,7 +90,7 @@ describe('DiffHighlighter', () => {
 		// Note: Gutter markers deferred to future enhancement
 	});
 
-	describe('AC3: Word-Level Diff Granularity Preserved', () => {
+	describe('Word-Level Diff Granularity Preserved', () => {
 		it('should highlight only changed words, not entire lines', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
@@ -116,9 +115,9 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	// AC4: Gutter Markers - Deferred to future enhancement for simplicity
+	// Gutter Markers - Deferred to future enhancement for simplicity
 
-	describe('AC8: Highlighting with Nested HTML - Tables', () => {
+	describe('Highlighting with Nested HTML - Tables', () => {
 		it('should highlight changed content within table cells', () => {
 			const beforeHtml = '<table><tr><td>old</td></tr></table>';
 			const afterHtml = '<table><tr><td>new</td></tr></table>';
@@ -142,7 +141,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('AC9: Highlighting with Nested HTML - Code Blocks', () => {
+	describe('Highlighting with Nested HTML - Code Blocks', () => {
 		it('should highlight changed code within code blocks', () => {
 			const beforeHtml = '<pre><code>const x = 1;</code></pre>';
 			const afterHtml = '<pre><code>const x = 2;</code></pre>';
@@ -168,7 +167,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('AC10: Highlighting with Nested HTML - Lists', () => {
+	describe('Highlighting with Nested HTML - Lists', () => {
 		it('should highlight changed content within list items', () => {
 			const beforeHtml = '<ul><li>item one</li></ul>';
 			const afterHtml = '<ul><li>item two</li></ul>';
@@ -193,7 +192,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('AC11: Empty Changes Handling', () => {
+	describe('Empty Changes Handling', () => {
 		it('should return unchanged HTML for empty changes array', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello world</p>';
@@ -219,7 +218,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('AC13: Change Location Tracking for Navigation', () => {
+	describe('Change Location Tracking for Navigation', () => {
 		it('should track change locations with sequential IDs', () => {
 			const beforeHtml = '<p>hello world</p>';
 			const afterHtml = '<p>hello universe</p>';
@@ -275,7 +274,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('AC14: HTML Injection Safety', () => {
+	describe('HTML Injection Safety', () => {
 		it('should preserve HTML entities', () => {
 			// Use a simple example where the entity is NOT in the changed region
 			const beforeHtml = '<p>hello&nbsp;world test</p>';
@@ -318,7 +317,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('AC15: Graceful Degradation', () => {
+	describe('Graceful Degradation', () => {
 		it('should return unhighlighted HTML on error', () => {
 			const beforeHtml = '<p>hello</p>';
 			const afterHtml = '<p>world</p>';
@@ -336,7 +335,7 @@ describe('DiffHighlighter', () => {
 		});
 	});
 
-	describe('Story 4.2b: Tag-Boundary-Aware Span Injection', () => {
+	describe('Tag-Boundary-Aware Span Injection', () => {
 		it('should wrap text segments separately when change spans multiple HTML elements', () => {
 			// Simulating a change that spans from heading into paragraph
 			const beforeHtml = '<h1>Title</h1>';

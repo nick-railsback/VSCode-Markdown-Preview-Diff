@@ -1,8 +1,8 @@
 /**
  * Syntax highlighting integration for code blocks
  *
- * Wraps Highlight.js to provide syntax highlighting for 190+ languages.
- * Implements FR14 (syntax highlighting for code blocks) and auto-detection.
+ * Wraps Highlight.js to provide syntax highlighting for 190+ languages
+ * with auto-detection.
  */
 
 import hljs from 'highlight.js';
@@ -97,6 +97,6 @@ function escapeHtml(html: string): string {
  */
 export function configureHighlightJs(): void {
 	// Future: Configure Highlight.js theme based on user settings
-	// For now, using default configuration per Story 2.2 requirements
+	// For now, using default configuration
 	logDebug('Highlight.js configured with default settings');
 }

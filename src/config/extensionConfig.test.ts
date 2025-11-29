@@ -1,7 +1,7 @@
 /**
  * Unit tests for ConfigurationService
  *
- * Story 5.1: User Configuration Settings
+ * 
  * Tests typed configuration access, validation, and change notifications.
  */
 
@@ -84,25 +84,25 @@ describe('ConfigurationService', () => {
 	});
 
 	describe('get() method', () => {
-		it('should return syncScroll value (AC3)', () => {
+		it('should return syncScroll value', () => {
 			const config = ConfigurationService.getInstance();
 
 			expect(config.get('syncScroll')).toBe(true);
 		});
 
-		it('should return highlightStyle value (AC4)', () => {
+		it('should return highlightStyle value', () => {
 			const config = ConfigurationService.getInstance();
 
 			expect(config.get('highlightStyle')).toBe('default');
 		});
 
-		it('should return defaultComparisonTarget value (AC1)', () => {
+		it('should return defaultComparisonTarget value', () => {
 			const config = ConfigurationService.getInstance();
 
 			expect(config.get('defaultComparisonTarget')).toBe('HEAD');
 		});
 
-		it('should return renderTimeout value (AC5)', () => {
+		it('should return renderTimeout value', () => {
 			const config = ConfigurationService.getInstance();
 
 			expect(config.get('renderTimeout')).toBe(5000);
@@ -242,7 +242,7 @@ describe('ConfigurationService', () => {
 		});
 	});
 
-	describe('Configuration change events (AC6)', () => {
+	describe('Configuration change events', () => {
 		it('should register listener for configuration changes', async () => {
 			const vscode = await import('vscode');
 			ConfigurationService.getInstance();

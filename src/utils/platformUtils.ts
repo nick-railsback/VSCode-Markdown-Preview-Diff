@@ -2,8 +2,6 @@
  * Platform utilities for cross-platform compatibility
  *
  * Provides OS detection, path normalization, and safe URI conversion.
- * Implements FR48-FR52 for cross-platform path handling.
- * Per Architecture Document Security section (NFR-S1, NFR-S3).
  */
 
 import * as vscode from 'vscode';
@@ -79,10 +77,10 @@ export function getPlatformInfo(): PlatformInfo {
  * @example
  * ```typescript
  * // On Unix
- * normalizePath('C:\\Users\\nick\\file.md') // Returns 'C:/Users/nick/file.md'
+ * normalizePath('C:\\Users\\developer\\file.md') // Returns 'C:/Users/developer/file.md'
  *
  * // On Windows
- * normalizePath('/home/nick/file.md') // Returns '\\home\\nick\\file.md'
+ * normalizePath('/home/developer/file.md') // Returns '\\home\\developer\\file.md'
  * ```
  */
 export function normalizePath(filePath: string): string {
@@ -205,8 +203,8 @@ export function isWindowsPath(filePath: string): boolean {
  *
  * @example
  * ```typescript
- * toForwardSlashes('C:\\Users\\nick\\file.md');
- * // Returns 'C:/Users/nick/file.md'
+ * toForwardSlashes('C:\\Users\\developer\\file.md');
+ * // Returns 'C:/Users/developer/file.md'
  * ```
  */
 export function toForwardSlashes(filePath: string): string {
@@ -223,8 +221,8 @@ export function toForwardSlashes(filePath: string): string {
  *
  * @example
  * ```typescript
- * toBackslashes('/home/nick/file.md');
- * // Returns '\\home\\nick\\file.md'
+ * toBackslashes('/home/developer/file.md');
+ * // Returns '\\home\\developer\\file.md'
  * ```
  */
 export function toBackslashes(filePath: string): string {

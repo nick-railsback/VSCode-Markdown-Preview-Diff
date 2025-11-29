@@ -6,13 +6,13 @@
       "description": "Standard absolute Unix paths",
       "cases": [
         {
-          "input": "/home/nick/docs/file.md",
+          "input": "/home/developer/docs/file.md",
           "expected": "file.md",
           "type": "absolute",
           "platform": "linux"
         },
         {
-          "input": "/Users/nick/Documents/project/README.md",
+          "input": "/Users/developer/Documents/project/README.md",
           "expected": "README.md",
           "type": "absolute",
           "platform": "darwin"
@@ -29,13 +29,13 @@
       "description": "Paths in user home directories",
       "cases": [
         {
-          "input": "/home/nick/project/src/extension.ts",
+          "input": "/home/developer/project/src/extension.ts",
           "expected": "src/extension.ts",
           "type": "absolute",
           "platform": "linux"
         },
         {
-          "input": "/Users/nick/Library/Application Support/Code/User/settings.json",
+          "input": "/Users/developer/Library/Application Support/Code/User/settings.json",
           "expected": "settings.json",
           "type": "absolute",
           "platform": "darwin"
@@ -51,7 +51,7 @@
           "type": "absolute"
         },
         {
-          "input": "/Users/nick/Google Drive/Projects/file.md",
+          "input": "/Users/developer/Google Drive/Projects/file.md",
           "expected": "file.md",
           "type": "absolute"
         }
@@ -61,22 +61,22 @@
       "description": "Paths with special characters",
       "cases": [
         {
-          "input": "/home/nick/docs/file-v1.0.md",
+          "input": "/home/developer/docs/file-v1.0.md",
           "expected": "file-v1.0.md",
           "type": "absolute"
         },
         {
-          "input": "/home/nick/docs/file_name.md",
+          "input": "/home/developer/docs/file_name.md",
           "expected": "file_name.md",
           "type": "absolute"
         },
         {
-          "input": "/home/nick/docs/file(1).md",
+          "input": "/home/developer/docs/file(1).md",
           "expected": "file(1).md",
           "type": "absolute"
         },
         {
-          "input": "/home/nick/docs/file@2x.md",
+          "input": "/home/developer/docs/file@2x.md",
           "expected": "file@2x.md",
           "type": "absolute"
         }
@@ -86,7 +86,7 @@
       "description": "Paths with Unicode characters",
       "cases": [
         {
-          "input": "/home/nick/文档/readme.md",
+          "input": "/home/developer/文档/readme.md",
           "expected": "readme.md",
           "type": "absolute"
         },
@@ -96,12 +96,12 @@
           "type": "absolute"
         },
         {
-          "input": "/home/nick/日本語/ファイル.md",
+          "input": "/home/developer/日本語/ファイル.md",
           "expected": "ファイル.md",
           "type": "absolute"
         },
         {
-          "input": "/home/nick/émoji/🎉.md",
+          "input": "/home/developer/émoji/🎉.md",
           "expected": "🎉.md",
           "type": "absolute"
         }
@@ -111,17 +111,17 @@
       "description": "Hidden files and directories (dot-prefixed)",
       "cases": [
         {
-          "input": "/home/nick/.config/vscode/settings.json",
+          "input": "/home/developer/.config/vscode/settings.json",
           "expected": "settings.json",
           "type": "absolute"
         },
         {
-          "input": "/home/nick/project/.gitignore",
+          "input": "/home/developer/project/.gitignore",
           "expected": ".gitignore",
           "type": "absolute"
         },
         {
-          "input": "/home/nick/.hidden/file.md",
+          "input": "/home/developer/.hidden/file.md",
           "expected": "file.md",
           "type": "absolute"
         }

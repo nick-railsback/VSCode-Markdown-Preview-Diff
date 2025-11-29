@@ -1,8 +1,8 @@
 /**
  * Unit and integration tests for MarkdownRenderer
  *
- * Tests FR12-FR20 (GFM rendering with 95%+ visual fidelity).
- * Coverage target: > 90% per Story 2.2 requirements.
+ * Tests GFM rendering with 95%+ visual fidelity).
+ * Coverage target: > 90%.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -95,7 +95,7 @@ describe('MarkdownRenderer', () => {
 			expect(result.html).toContain('<p>Second paragraph.</p>');
 		});
 
-		it('should render headings H1-H6 (FR19)', async () => {
+		it('should render headings H1-H6', async () => {
 			const markdown = `# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6`;
 			const result = await renderer.render(markdown, renderOptions);
 
@@ -109,7 +109,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Emphasis and formatting (FR19)', () => {
+	describe('Emphasis and formatting', () => {
 		it('should render bold text', async () => {
 			const markdown = '**bold text**';
 			const result = await renderer.render(markdown, renderOptions);
@@ -135,7 +135,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Links (FR18)', () => {
+	describe('Links', () => {
 		it('should render external links', async () => {
 			const markdown = '[GitHub](https://github.com)';
 			const result = await renderer.render(markdown, renderOptions);
@@ -154,7 +154,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Lists (FR17)', () => {
+	describe('Lists', () => {
 		it('should render unordered lists', async () => {
 			const markdown = `- Item 1\n- Item 2\n- Item 3`;
 			const result = await renderer.render(markdown, renderOptions);
@@ -190,7 +190,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Blockquotes (FR19)', () => {
+	describe('Blockquotes', () => {
 		it('should render blockquotes', async () => {
 			const markdown = '> This is a quote';
 			const result = await renderer.render(markdown, renderOptions);
@@ -210,8 +210,8 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Code (FR14, FR15)', () => {
-		it('should render inline code (FR15)', async () => {
+	describe('Code', () => {
+		it('should render inline code', async () => {
 			const markdown = 'Inline `code` here';
 			const result = await renderer.render(markdown, renderOptions);
 
@@ -219,7 +219,7 @@ describe('MarkdownRenderer', () => {
 			expect(result.html).toContain('<code>code</code>');
 		});
 
-		it('should render fenced code blocks (FR14)', async () => {
+		it('should render fenced code blocks', async () => {
 			const markdown = '```\ncode block\n```';
 			const result = await renderer.render(markdown, renderOptions);
 
@@ -232,7 +232,7 @@ describe('MarkdownRenderer', () => {
 			expect(result.html).toContain('</pre>');
 		});
 
-		it('should render code blocks with language (FR14)', async () => {
+		it('should render code blocks with language', async () => {
 			const markdown = '```javascript\nconst foo = "bar";\n```';
 			const result = await renderer.render(markdown, renderOptions);
 
@@ -256,7 +256,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Tables (FR13)', () => {
+	describe('Tables', () => {
 		it('should render simple tables', async () => {
 			const markdown = `| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |`;
 			const result = await renderer.render(markdown, renderOptions);
@@ -281,7 +281,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Images (FR16)', () => {
+	describe('Images', () => {
 		it('should render external image URLs', async () => {
 			const markdown = '![Alt text](https://example.com/image.png)';
 			const result = await renderer.render(markdown, renderOptions);
@@ -309,7 +309,7 @@ describe('MarkdownRenderer', () => {
 		});
 	});
 
-	describe('Error handling (FR55)', () => {
+	describe('Error handling', () => {
 		it('should handle rendering errors gracefully', async () => {
 			// Force an error by providing invalid input to marked
 			// Note: Marked is very forgiving, so we'll test the error path structure

@@ -2,7 +2,6 @@
  * TypeScript type definitions for markdown rendering
  *
  * Provides type safety for MarkdownRenderer, SyntaxHighlighter, and ImageResolver.
- * Per Story 2.2 Task 7 requirements and TypeScript strict mode compliance.
  */
 
 /**

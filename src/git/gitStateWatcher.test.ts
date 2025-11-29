@@ -1,8 +1,6 @@
 /**
  * GitStateWatcher unit tests
  *
- * Story 4.5: Real-Time Diff Updates and Git State Monitoring
- *
  * Tests:
  * - Initialization
  * - Repository matching

@@ -2,7 +2,6 @@
  * Unit tests for platformUtils
  *
  * Tests cross-platform path handling and OS detection utilities.
- * Implements FR48-FR52 requirements for cross-platform compatibility.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -84,18 +83,18 @@ describe('platformUtils', () => {
 
 	describe('normalizePath', () => {
 		it('should normalize Unix forward-slash paths', () => {
-			const result = normalizePath('/home/nick/docs/file.md');
+			const result = normalizePath('/home/developer/docs/file.md');
 			expect(result).toBeTruthy();
 			expect(result).not.toContain('//');
 		});
 
 		it('should handle paths with redundant separators', () => {
-			const result = normalizePath('/home/nick//docs///file.md');
+			const result = normalizePath('/home/developer//docs///file.md');
 			expect(result).not.toContain('//');
 		});
 
 		it('should handle paths with . segments', () => {
-			const result = normalizePath('/home/nick/./docs/./file.md');
+			const result = normalizePath('/home/developer/./docs/./file.md');
 			expect(result).not.toContain('/./');
 		});
 
@@ -111,12 +110,12 @@ describe('platformUtils', () => {
 		});
 
 		it('should preserve Unicode characters', () => {
-			const result = normalizePath('/home/nick/文档/readme.md');
+			const result = normalizePath('/home/developer/文档/readme.md');
 			expect(result).toContain('文档');
 		});
 
 		it('should handle Windows backslash paths', () => {
-			const result = normalizePath('C:\\Users\\nick\\docs\\file.md');
+			const result = normalizePath('C:\\Users\\developer\\docs\\file.md');
 			expect(result).toBeTruthy();
 		});
 
@@ -128,14 +127,14 @@ describe('platformUtils', () => {
 
 	describe('validateNoTraversal', () => {
 		it('should return true for safe path', () => {
-			expect(validateNoTraversal('/home/nick/docs/file.md')).toBe(true);
+			expect(validateNoTraversal('/home/developer/docs/file.md')).toBe(true);
 		});
 
 		it('should throw error for path with ..', () => {
-			expect(() => validateNoTraversal('/home/nick/../etc/passwd')).toThrow(GitError);
+			expect(() => validateNoTraversal('/home/developer/../etc/passwd')).toThrow(GitError);
 
 			try {
-				validateNoTraversal('/home/nick/../etc/passwd');
+				validateNoTraversal('/home/developer/../etc/passwd');
 			} catch (error) {
 				expect(error).toBeInstanceOf(GitError);
 				expect((error as GitError).type).toBe(GitErrorType.InvalidPath);
@@ -151,25 +150,25 @@ describe('platformUtils', () => {
 		});
 
 		it('should allow paths with dots in filenames', () => {
-			expect(validateNoTraversal('/home/nick/file.v1.0.md')).toBe(true);
+			expect(validateNoTraversal('/home/developer/file.v1.0.md')).toBe(true);
 		});
 
 		it('should allow hidden files (single dot prefix)', () => {
-			expect(validateNoTraversal('/home/nick/.gitignore')).toBe(true);
+			expect(validateNoTraversal('/home/developer/.gitignore')).toBe(true);
 		});
 	});
 
 	describe('toVscodeUri', () => {
 		it('should convert Unix path to URI', () => {
-			const uri = toVscodeUri('/home/nick/docs/file.md');
+			const uri = toVscodeUri('/home/developer/docs/file.md');
 			expect(uri).toBeTruthy();
-			expect(uri.fsPath).toBe('/home/nick/docs/file.md');
+			expect(uri.fsPath).toBe('/home/developer/docs/file.md');
 		});
 
 		it('should convert Windows path to URI', () => {
-			const uri = toVscodeUri('C:\\Users\\nick\\docs\\file.md');
+			const uri = toVscodeUri('C:\\Users\\developer\\docs\\file.md');
 			expect(uri).toBeTruthy();
-			expect(uri.fsPath).toBe('C:\\Users\\nick\\docs\\file.md');
+			expect(uri.fsPath).toBe('C:\\Users\\developer\\docs\\file.md');
 		});
 
 		it('should throw error for empty path', () => {
@@ -184,7 +183,7 @@ describe('platformUtils', () => {
 		});
 
 		it('should handle paths with Unicode characters', () => {
-			const uri = toVscodeUri('/home/nick/文档/readme.md');
+			const uri = toVscodeUri('/home/developer/文档/readme.md');
 			expect(uri).toBeTruthy();
 			expect(uri.fsPath).toContain('文档');
 		});
@@ -192,7 +191,7 @@ describe('platformUtils', () => {
 
 	describe('isWindowsPath', () => {
 		it('should detect Windows drive letter path', () => {
-			expect(isWindowsPath('C:\\Users\\nick\\file.md')).toBe(true);
+			expect(isWindowsPath('C:\\Users\\developer\\file.md')).toBe(true);
 			expect(isWindowsPath('D:\\Projects\\file.md')).toBe(true);
 		});
 
@@ -205,47 +204,47 @@ describe('platformUtils', () => {
 		});
 
 		it('should not detect Unix paths as Windows', () => {
-			expect(isWindowsPath('/home/nick/file.md')).toBe(false);
-			expect(isWindowsPath('/Users/nick/file.md')).toBe(false);
+			expect(isWindowsPath('/home/developer/file.md')).toBe(false);
+			expect(isWindowsPath('/Users/developer/file.md')).toBe(false);
 		});
 
 		it('should handle mixed separator paths', () => {
 			// More backslashes than forward slashes
-			expect(isWindowsPath('C:\\Users\\nick/file.md')).toBe(true);
+			expect(isWindowsPath('C:\\Users\\developer/file.md')).toBe(true);
 		});
 	});
 
 	describe('toForwardSlashes', () => {
 		it('should convert backslashes to forward slashes', () => {
-			const result = toForwardSlashes('C:\\Users\\nick\\docs\\file.md');
-			expect(result).toBe('C:/Users/nick/docs/file.md');
+			const result = toForwardSlashes('C:\\Users\\developer\\docs\\file.md');
+			expect(result).toBe('C:/Users/developer/docs/file.md');
 		});
 
 		it('should preserve forward slashes', () => {
-			const result = toForwardSlashes('/home/nick/docs/file.md');
-			expect(result).toBe('/home/nick/docs/file.md');
+			const result = toForwardSlashes('/home/developer/docs/file.md');
+			expect(result).toBe('/home/developer/docs/file.md');
 		});
 
 		it('should handle mixed separators', () => {
-			const result = toForwardSlashes('C:\\Users/nick\\docs/file.md');
-			expect(result).toBe('C:/Users/nick/docs/file.md');
+			const result = toForwardSlashes('C:\\Users/developer\\docs/file.md');
+			expect(result).toBe('C:/Users/developer/docs/file.md');
 		});
 	});
 
 	describe('toBackslashes', () => {
 		it('should convert forward slashes to backslashes', () => {
-			const result = toBackslashes('/home/nick/docs/file.md');
-			expect(result).toBe('\\home\\nick\\docs\\file.md');
+			const result = toBackslashes('/home/developer/docs/file.md');
+			expect(result).toBe('\\home\\developer\\docs\\file.md');
 		});
 
 		it('should preserve backslashes', () => {
-			const result = toBackslashes('C:\\Users\\nick\\docs\\file.md');
-			expect(result).toBe('C:\\Users\\nick\\docs\\file.md');
+			const result = toBackslashes('C:\\Users\\developer\\docs\\file.md');
+			expect(result).toBe('C:\\Users\\developer\\docs\\file.md');
 		});
 
 		it('should handle mixed separators', () => {
-			const result = toBackslashes('C:/Users\\nick/docs\\file.md');
-			expect(result).toBe('C:\\Users\\nick\\docs\\file.md');
+			const result = toBackslashes('C:/Users\\developer/docs\\file.md');
+			expect(result).toBe('C:\\Users\\developer\\docs\\file.md');
 		});
 	});
 
@@ -256,7 +255,7 @@ describe('platformUtils', () => {
 		});
 
 		it('should handle path with emoji', () => {
-			const result = normalizePath('/home/nick/🎉/file.md');
+			const result = normalizePath('/home/developer/🎉/file.md');
 			expect(result).toContain('🎉');
 		});
 
@@ -267,17 +266,17 @@ describe('platformUtils', () => {
 		});
 
 		it('should handle paths with @ symbol', () => {
-			const result = normalizePath('/home/nick/image@2x.png');
+			const result = normalizePath('/home/developer/image@2x.png');
 			expect(result).toContain('@');
 		});
 
 		it('should handle paths with hash symbol', () => {
-			const result = normalizePath('/home/nick/file#1.md');
+			const result = normalizePath('/home/developer/file#1.md');
 			expect(result).toContain('#');
 		});
 
 		it('should handle paths with parentheses', () => {
-			const result = normalizePath('/home/nick/file(1).md');
+			const result = normalizePath('/home/developer/file(1).md');
 			expect(result).toContain('(1)');
 		});
 	});

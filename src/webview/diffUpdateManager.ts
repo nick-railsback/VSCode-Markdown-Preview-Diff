@@ -4,16 +4,14 @@
  * Manages all watchers for document changes, git state changes, and file system changes.
  * Implements debounced updates to prevent excessive recomputation during rapid editing.
  *
- * Story 4.5: Real-Time Diff Updates and Git State Monitoring
- *
  * Watchers:
- * - Document change watcher (AC1, AC2, AC10)
- * - Git state watcher (AC3, AC4, AC5)
- * - File system watcher (AC6)
+ * - Document change watcher
+ * - Git state watcher (commits, stash, branch switches)
+ * - File system watcher (external changes)
  *
  * Responsibilities:
  * - Coordinate all update triggers
- * - Debounce updates (300ms per AC2)
+ * - Debounce updates (300ms)
  * - Trigger diff recomputation
  * - Handle "no changes" state
  * - Preserve scroll position
@@ -30,7 +28,7 @@ import { RenderResult } from '../types/webview.types';
 import { logDebug, logInfo, logWarning, logError } from '../utils/errorHandler';
 import { GitStateWatcher } from '../git/gitStateWatcher';
 
-/** Debounce delay in milliseconds (AC2) */
+/** Debounce delay in milliseconds */
 const DEBOUNCE_DELAY_MS = 300;
 
 /**
@@ -46,7 +44,7 @@ export class DiffUpdateManager {
 	/** Extension context for resource disposal */
 	private readonly context: vscode.ExtensionContext;
 
-	/** All disposables for cleanup (AC9) */
+	/** All disposables for cleanup */
 	private disposables: vscode.Disposable[] = [];
 
 	/** Debounce timer reference */
@@ -101,12 +99,12 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Set up document change watcher (AC1, AC2, AC10)
+	 * Set up document change watcher
 	 * Monitors VS Code text document changes for the tracked file
 	 */
 	private setupDocumentChangeWatcher(): void {
 		const disposable = vscode.workspace.onDidChangeTextDocument((event) => {
-			// AC10: Only respond to changes in the tracked file
+			// Only respond to changes in the tracked file
 			if (event.document.uri.fsPath !== this.filePath) {
 				return;
 			}
@@ -121,7 +119,7 @@ export class DiffUpdateManager {
 			// Mark this as an internal edit (for file system watcher filtering)
 			this.lastInternalEditTime = Date.now();
 
-			// AC2: Debounce updates
+			// Debounce updates
 			this.scheduleUpdate();
 		});
 
@@ -130,7 +128,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Set up git state watcher (AC3, AC4, AC5)
+	 * Set up git state watcher
 	 * Monitors git state changes via VS Code Git Extension API
 	 */
 	private setupGitStateWatcher(): void {
@@ -157,7 +155,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Set up file system watcher (AC6)
+	 * Set up file system watcher
 	 * Monitors external file changes
 	 */
 	private setupFileSystemWatcher(): void {
@@ -177,7 +175,7 @@ export class DiffUpdateManager {
 
 			this.fileSystemWatcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-			// Handle file change (AC6)
+			// Handle file change
 			const changeDisposable = this.fileSystemWatcher.onDidChange(() => {
 				// Filter out changes that came from internal VS Code edits
 				// If we edited within the last 1000ms, assume it's not external
@@ -207,7 +205,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Schedule a debounced update (AC2)
+	 * Schedule a debounced update
 	 * Coalesces rapid changes into single update
 	 */
 	private scheduleUpdate(): void {
@@ -224,7 +222,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Recompute diff and update webview (AC1, AC3, AC4, AC5, AC6)
+	 * Recompute diff and update webview
 	 * Uses existing services pipeline
 	 */
 	private async recomputeDiff(): Promise<void> {
@@ -246,7 +244,7 @@ export class DiffUpdateManager {
 				? document.getText()
 				: await gitService.getWorkingVersion(this.filePath);
 
-			// Check if files are identical (AC3, AC4 - "no changes" state)
+			// Check if files are identical ("no changes" state)
 			if (beforeContent === workingVersion) {
 				logInfo('DiffUpdateManager: No changes detected after recomputation');
 				this.sendNoChanges();
@@ -302,13 +300,12 @@ export class DiffUpdateManager {
 				changes: highlightedResult.changeLocations
 			};
 
-			// Send update to webview (AC7 - preserveScroll flag)
+			// Send update to webview with scroll preservation
 			this.sendUpdateDiff(renderResult);
 
 			logInfo(`DiffUpdateManager: Diff recomputed - ${highlightedResult.changeLocations.length} changes`);
 
 		} catch (error) {
-			// AC8: Error handling
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			logError('DiffUpdateManager: Diff recomputation failed', error as Error);
 			this.sendError(`Failed to update diff: ${errorMessage}`);
@@ -333,7 +330,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Send noChanges message to webview (AC3, AC4)
+	 * Send noChanges message to webview
 	 */
 	private sendNoChanges(): void {
 		this.webview.postMessage({
@@ -348,7 +345,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Send error message to webview (AC8)
+	 * Send error message to webview
 	 */
 	private sendError(message: string): void {
 		this.webview.postMessage({
@@ -364,7 +361,7 @@ export class DiffUpdateManager {
 	}
 
 	/**
-	 * Dispose all resources (AC9)
+	 * Dispose all resources
 	 * Cleans up watchers, timers, and event listeners
 	 */
 	public dispose(): void {

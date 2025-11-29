@@ -6,12 +6,12 @@
       "description": "Standard Windows paths with drive letters",
       "cases": [
         {
-          "input": "C:\\Users\\nick\\docs\\file.md",
+          "input": "C:\\Users\\developer\\docs\\file.md",
           "expected": "file.md",
           "type": "absolute"
         },
         {
-          "input": "C:\\Users\\nick\\project\\src\\extension.ts",
+          "input": "C:\\Users\\developer\\project\\src\\extension.ts",
           "expected": "src\\extension.ts",
           "type": "absolute"
         },
@@ -56,17 +56,17 @@
       "description": "Paths with special characters",
       "cases": [
         {
-          "input": "C:\\Users\\nick\\docs\\file-v1.0.md",
+          "input": "C:\\Users\\developer\\docs\\file-v1.0.md",
           "expected": "file-v1.0.md",
           "type": "absolute"
         },
         {
-          "input": "C:\\Users\\nick\\docs\\file_name.md",
+          "input": "C:\\Users\\developer\\docs\\file_name.md",
           "expected": "file_name.md",
           "type": "absolute"
         },
         {
-          "input": "C:\\Users\\nick\\docs\\file(1).md",
+          "input": "C:\\Users\\developer\\docs\\file(1).md",
           "expected": "file(1).md",
           "type": "absolute"
         }
@@ -76,7 +76,7 @@
       "description": "Paths with Unicode characters",
       "cases": [
         {
-          "input": "C:\\Users\\nick\\文档\\readme.md",
+          "input": "C:\\Users\\developer\\文档\\readme.md",
           "expected": "readme.md",
           "type": "absolute"
         },
@@ -86,7 +86,7 @@
           "type": "absolute"
         },
         {
-          "input": "C:\\Users\\nick\\日本語\\ファイル.md",
+          "input": "C:\\Users\\developer\\日本語\\ファイル.md",
           "expected": "ファイル.md",
           "type": "absolute"
         }
@@ -106,13 +106,13 @@
       "description": "Paths with mixed forward/back slashes (invalid but common)",
       "cases": [
         {
-          "input": "C:\\Users/nick\\docs/file.md",
+          "input": "C:\\Users/developer\\docs/file.md",
           "expected": "file.md",
           "type": "mixed",
           "note": "Should be normalized"
         },
         {
-          "input": "C:/Users\\nick/docs\\file.md",
+          "input": "C:/Users\\developer/docs\\file.md",
           "expected": "file.md",
           "type": "mixed",
           "note": "Should be normalized"

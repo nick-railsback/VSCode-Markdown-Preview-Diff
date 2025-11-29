@@ -1,8 +1,8 @@
 /**
  * Image path resolution for markdown images
  *
- * Resolves relative and absolute image paths for webview display.
- * Implements FR16 (images with relative and absolute paths) with security validation.
+ * Resolves relative and absolute image paths for webview display
+ * with security validation.
  */
 
 import * as vscode from 'vscode';
@@ -44,7 +44,7 @@ export function resolveImagePath(
 	workspaceRoot: string,
 	markdownFilePath: string
 ): string {
-	// External URLs - pass through unchanged (FR16)
+	// External URLs - pass through unchanged
 	if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
 		logDebug(`Image is external URL: ${imagePath}`);
 		return imagePath;
@@ -64,17 +64,17 @@ export function resolveImagePath(
 			logDebug(`Resolved absolute image path: ${imagePath} -> ${fileUri}`);
 			return fileUri;
 		} catch (error) {
-			// AC5: Path validation failed (outside workspace or path traversal)
+			// Path validation failed (outside workspace or path traversal)
 			// Log missing image path to output channel via errorHandler
 			if (error instanceof Error) {
 				logErrorWithContext(error, `Invalid absolute image path: ${imagePath}`);
 			}
-			// Return original path - will result in broken image placeholder (AC5: standard browser broken image icon)
+			// Return original path - will result in broken image placeholder
 			return imagePath;
 		}
 	}
 
-	// Relative paths - resolve relative to markdown file directory (FR16)
+	// Relative paths - resolve relative to markdown file directory
 	try {
 		const markdownDir = path.dirname(markdownFilePath);
 		const resolvedPath = path.resolve(markdownDir, imagePath);
@@ -85,12 +85,12 @@ export function resolveImagePath(
 		logDebug(`Resolved relative image path: ${imagePath} -> ${fileUri}`);
 		return fileUri;
 	} catch (error) {
-		// AC5: Path resolution or validation failed - log missing image path via errorHandler
+		// Path resolution or validation failed - log missing image path via errorHandler
 		if (error instanceof Error) {
 			logErrorWithContext(error, `Failed to resolve image path: ${imagePath} (from ${markdownFilePath})`);
 		}
-		// Return original path - will result in broken image placeholder (AC5: standard browser broken image icon)
-		// AC5: The rest of the markdown renders correctly (no crash)
+		// Return original path - will result in broken image placeholder
+		// The rest of the markdown renders correctly (no crash)
 		return imagePath;
 	}
 }

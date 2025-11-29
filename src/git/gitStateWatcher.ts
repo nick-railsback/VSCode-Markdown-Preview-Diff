@@ -1,12 +1,10 @@
 /**
  * GitStateWatcher - Monitors VS Code Git Extension for state changes
  *
- * Story 4.5: Real-Time Diff Updates and Git State Monitoring
- *
  * Detects:
- * - Git commits (AC3): HEAD changes
- * - Git stash (AC4): Working tree state changes
- * - Branch switches (AC5): HEAD branch changes
+ * - Git commits: HEAD changes
+ * - Git stash: Working tree state changes
+ * - Branch switches: HEAD branch changes
  *
  * Uses VS Code Git Extension API:
  * - vscode.extensions.getExtension('vscode.git')
@@ -210,20 +208,20 @@ export class GitStateWatcher {
 		let changeDetected = false;
 		let changeType = 'unknown';
 
-		// AC3: Detect commit - HEAD commit changed on same branch
+		// Detect commit - HEAD commit changed on same branch
 		if (currentCommit !== this.lastHeadCommit) {
 			if (currentBranch === this.lastBranchName) {
 				changeType = 'commit';
 				logDebug(`GitStateWatcher: Commit detected - ${this.lastHeadCommit?.substring(0, 7)} → ${currentCommit?.substring(0, 7)}`);
 			} else {
-				// AC5: Branch switch detected
+				// Branch switch detected
 				changeType = 'branch-switch';
 				logDebug(`GitStateWatcher: Branch switch detected - ${this.lastBranchName} → ${currentBranch}`);
 			}
 			changeDetected = true;
 		}
 
-		// AC4: Working tree changes (stash) - this is also caught by onDidChange
+		// Working tree changes (stash) - this is also caught by onDidChange
 		// The repository state change event fires on any working tree modification
 		// We emit the event and let the diff recomputation determine if content changed
 

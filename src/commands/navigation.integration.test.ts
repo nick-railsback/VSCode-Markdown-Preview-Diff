@@ -145,7 +145,7 @@ describe('Navigation Integration Tests', () => {
 		ConfigurationService.resetInstance();
 	});
 
-	describe('AC3 & AC4: End-to-end navigation flow', () => {
+	describe('End-to-end navigation flow', () => {
 		it('should navigate to next change through WebviewManager', async () => {
 			// Create panel with ChangeNavigator
 			const renderResult = {
@@ -205,7 +205,7 @@ describe('Navigation Integration Tests', () => {
 		});
 	});
 
-	describe('AC5 & AC6: Wrapping behavior integration', () => {
+	describe('Wrapping behavior integration', () => {
 		it('should wrap from last to first change', async () => {
 			const renderResult = {
 				beforeHtml: '<p>Before</p>',
@@ -241,7 +241,7 @@ describe('Navigation Integration Tests', () => {
 		});
 	});
 
-	describe('AC8: Message protocol integration', () => {
+	describe('Message protocol integration', () => {
 		it('should send correctly formatted navigateToChange message', async () => {
 			const renderResult = {
 				beforeHtml: '<p>Before</p>',

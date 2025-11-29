@@ -1,14 +1,14 @@
 /**
- * Integration tests for scroll synchronization (Story 4.3)
+ * Integration tests for scroll synchronization
  *
  * Tests the integration between:
  * - WebviewManager config change listener
  * - MessageHandler updateSyncScroll
  * - Webview message protocol
  *
- * AC3: Configuration setting for sync scroll
- * AC4: Disabled sync scroll behavior
- * AC7: Initialize sync scroll from config
+ * Configuration setting for sync scroll
+ * Disabled sync scroll behavior
+ * Initialize sync scroll from config
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -105,7 +105,7 @@ vi.mock('./contentBuilder', () => ({
 	},
 }));
 
-describe('Scroll Sync Integration Tests (Story 4.3)', () => {
+describe('Scroll Sync Integration Tests', () => {
 	let mockContext: any;
 	let renderResult: RenderResult;
 
@@ -142,7 +142,7 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 		ConfigurationService.resetInstance();
 	});
 
-	describe('AC3: Configuration setting for sync scroll', () => {
+	describe('Configuration setting for sync scroll', () => {
 		it('should register config change listener when panel is created', async () => {
 			const vscode = await import('vscode');
 
@@ -168,7 +168,7 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 		});
 	});
 
-	describe('AC4: Runtime config change handling', () => {
+	describe('Runtime config change handling', () => {
 		it('should send updateConfig message when syncScroll changes', async () => {
 			const vscode = await import('vscode');
 
@@ -229,7 +229,7 @@ describe('Scroll Sync Integration Tests (Story 4.3)', () => {
 		});
 	});
 
-	describe('AC7: Initialize sync scroll from config', () => {
+	describe('Initialize sync scroll from config', () => {
 		it('should include syncScroll in initialize message data', async () => {
 			WebviewManager.createDiffPanel(mockContext, renderResult);
 

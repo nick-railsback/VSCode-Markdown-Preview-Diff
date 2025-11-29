@@ -1,7 +1,7 @@
 /**
  * Real-Time Diff Updates Integration Tests
  *
- * Story 4.5: Real-Time Diff Updates and Git State Monitoring
+ * 
  *
  * Tests the integration between:
  * - DiffUpdateManager

@@ -4,12 +4,12 @@ import { logDebug, logInfo } from '../utils/errorHandler';
 
 /**
  * Navigate to the previous change in the diff panel
- * Implements AC4 (Navigate to Previous Change via Keyboard) and AC6 (Navigation Wrapping at Beginning)
+ * Handles navigation wrapping at beginning
  */
 export async function prevChange(): Promise<void> {
 	logDebug('[prevChange] Command invoked');
 
-	// Check if there's an active diff panel (AC11)
+	// Check if there's an active diff panel
 	if (!WebviewManager.hasActivePanel()) {
 		vscode.window.showInformationMessage('No diff panel open');
 		return;
@@ -23,7 +23,7 @@ export async function prevChange(): Promise<void> {
 		return;
 	}
 
-	// Check if there are any changes (AC12)
+	// Check if there are any changes
 	if (changeNavigator.getTotalChanges() === 0) {
 		vscode.window.showInformationMessage('No changes to navigate');
 		return;

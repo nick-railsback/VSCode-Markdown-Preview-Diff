@@ -222,7 +222,7 @@ describe('MessageHandler', () => {
 		});
 	});
 
-	describe('updateSyncScroll (Story 4.3)', () => {
+	describe('updateSyncScroll', () => {
 		it('should send updateConfig message when syncScroll is enabled', () => {
 			messageHandler.updateSyncScroll(true);
 
@@ -242,7 +242,7 @@ describe('MessageHandler', () => {
 		});
 	});
 
-	describe('ready message with syncScroll config (Story 4.3)', () => {
+	describe('ready message with syncScroll config', () => {
 		it('should send initialize with syncScroll config from settings', () => {
 			const renderResult = {
 				beforeHtml: '<p>Before</p>',

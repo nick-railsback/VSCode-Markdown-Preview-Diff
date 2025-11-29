@@ -1,12 +1,12 @@
 /**
  * DiffUpdateManager unit tests
  *
- * Story 4.5: Real-Time Diff Updates and Git State Monitoring
+ * 
  *
  * Tests:
- * - Debounce mechanism (AC2)
- * - Watcher scope filtering (AC10)
- * - Resource cleanup (AC9)
+ * - Debounce mechanism
+ * - Watcher scope filtering
+ * - Resource cleanup
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
@@ -112,7 +112,7 @@ describe('DiffUpdateManager', () => {
 		});
 	});
 
-	describe('debounce mechanism (AC2)', () => {
+	describe('debounce mechanism', () => {
 		it('should not trigger immediately on document change', () => {
 			manager = new DiffUpdateManager(
 				'/workspace/test.md',
@@ -153,7 +153,7 @@ describe('DiffUpdateManager', () => {
 		});
 	});
 
-	describe('watcher scope (AC10)', () => {
+	describe('watcher scope', () => {
 		it('should ignore changes to other files', () => {
 			manager = new DiffUpdateManager(
 				'/workspace/test.md',
@@ -195,7 +195,7 @@ describe('DiffUpdateManager', () => {
 		});
 	});
 
-	describe('resource cleanup (AC9)', () => {
+	describe('resource cleanup', () => {
 		it('should clear debounce timer on dispose', () => {
 			manager = new DiffUpdateManager(
 				'/workspace/test.md',

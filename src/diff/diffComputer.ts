@@ -124,12 +124,8 @@ export class DiffComputer {
 				addedLines,
 				removedLines
 			};
-		} catch (error) {
+		} catch {
 			// Graceful error handling: return empty result on error
-			// Per NFR-R1: Don't crash, log for debugging
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-			console.error('[DiffComputer] Diff computation failed:', errorMessage);
-
 			// Return empty DiffResult
 			return {
 				changes: [],

@@ -1,8 +1,7 @@
 /**
  * Markdown rendering engine with GitHub-Flavored Markdown support
  *
- * Implements FR12-FR20 (GFM rendering with 95%+ visual fidelity).
- * Uses Marked 17.0.0 for 97% GFM compatibility (exceeds 95% requirement per ADR-003).
+ * Uses Marked 17.0.0 for high GFM compatibility.
  */
 
 // Use require for Marked (ES module) in CommonJS context
@@ -31,11 +30,6 @@ export class MarkdownRenderer {
 	/**
 	 * Renders markdown to HTML with GitHub-flavored syntax
 	 *
-	 * Implements:
-	 * - FR12-FR20: Tables, code blocks, inline code, images, lists, links, blockquotes, etc.
-	 * - NFR-P5: Async non-blocking operation
-	 * - NFR-R1: Graceful error handling
-	 *
 	 * @param markdown - Markdown string to render
 	 * @param options - Rendering options (workspace root, markdown file path)
 	 * @returns RenderResult with HTML output or error
@@ -60,14 +54,14 @@ export class MarkdownRenderer {
 				this.markedInitialized = true;
 			}
 
-			// Get render timeout from configuration (AC5, FR46)
+			// Get render timeout from configuration
 			const configService = ConfigurationService.getInstance();
 			const renderTimeout = configService.get('renderTimeout');
 
 			logDebug(`Rendering markdown (${markdown.length} characters), timeout: ${renderTimeout}ms`);
 			const startTime = Date.now();
 
-			// Parse markdown with timeout (AC5, FR46)
+			// Parse markdown with timeout
 			const html = await this.renderWithTimeout(markdown, renderTimeout);
 
 			const duration = Date.now() - startTime;
@@ -78,11 +72,11 @@ export class MarkdownRenderer {
 				html,
 			};
 		} catch (error) {
-			// Rendering failed - return error result (FR55, AC3: error message if rendering fails)
+			// Rendering failed - return error result
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 			const errorDetails = error instanceof Error ? error.stack : undefined;
 
-			// AC3: Log full stack trace to output channel via centralized errorHandler
+			// Log full stack trace to output channel via centralized errorHandler
 			if (error instanceof Error) {
 				logErrorWithContext(error, 'Markdown rendering failed');
 			}
@@ -100,10 +94,10 @@ export class MarkdownRenderer {
 	}
 
 	/**
-	 * Renders markdown with a timeout mechanism (AC4, FR46)
+	 * Renders markdown with a timeout mechanism
 	 *
 	 * If rendering takes longer than the timeout, returns partial content
-	 * with a warning message per AC4: "File too large or complex. Consider splitting into smaller files."
+	 * with a warning message suggesting to split the file.
 	 *
 	 * @param markdown - Markdown string to render
 	 * @param timeout - Timeout in milliseconds
@@ -114,13 +108,12 @@ export class MarkdownRenderer {
 		return new Promise<string>((resolve, reject) => {
 			let resolved = false;
 
-			// Set timeout (AC4: handle timeout with user-friendly message)
+			// Set timeout with user-friendly message
 			const timeoutId = setTimeout(() => {
 				if (!resolved) {
 					resolved = true;
-					// AC4: Log timeout via centralized errorHandler
 					logWarning(`Markdown rendering timed out after ${timeout}ms`);
-					// AC4: Return partial content with warning message and suggested workarounds
+					// Return partial content with warning message and suggested workarounds
 					resolve(`<div class="render-warning" style="padding: 10px; background: var(--vscode-inputValidation-warningBackground, #5c5c00); border: 1px solid var(--vscode-inputValidation-warningBorder, #b89500); border-radius: 4px; margin-bottom: 10px;">
 						<strong>⚠️ File too large or complex</strong>
 						<p>The markdown file could not be rendered within ${timeout}ms. Consider splitting into smaller files.</p>
@@ -168,7 +161,7 @@ export class MarkdownRenderer {
 	private configureMarked(options: RenderOptions): void {
 		logDebug('Configuring Marked with GFM settings');
 
-		// Configure custom renderer for image path resolution (FR16, Task 4)
+		// Configure custom renderer for image path resolution
 		const renderer = {
 			// Override image renderer to resolve paths
 			image({ href, title, text }: { href?: string; title?: string; text: string }): string {
@@ -191,7 +184,7 @@ export class MarkdownRenderer {
 				}
 			},
 
-			// Override code renderer to use Highlight.js for syntax highlighting (FR14)
+			// Override code renderer to use Highlight.js for syntax highlighting
 			code({ text, lang }: { text: string; lang?: string }): string {
 				try {
 					const highlighted = highlightCode(text, lang);
@@ -209,7 +202,7 @@ export class MarkdownRenderer {
 
 		// Set Marked options for GFM rendering with custom renderer
 		marked.use({
-			gfm: true, // Enable GitHub Flavored Markdown (FR12)
+			gfm: true, // Enable GitHub Flavored Markdown
 			breaks: false, // Match GitHub's line break behavior (don't add <br> on single line breaks)
 			pedantic: false, // Don't be overly strict with markdown syntax
 			renderer,

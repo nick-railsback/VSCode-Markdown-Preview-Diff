@@ -1,10 +1,8 @@
 /**
  * Cross-Platform Validation Tests
  *
- * Story 5.4: Validate Performance and Reliability Across Platforms
- *
  * Tests cross-platform path handling, keyboard shortcuts, and platform-specific
- * behavior for macOS (AC1), Windows (AC2), and Linux (AC3).
+ * behavior for macOS, Windows, and Linux.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -30,7 +28,7 @@ vi.mock('vscode', () => ({
 	}
 }));
 
-describe('Cross-Platform Validation (AC1, AC2, AC3)', () => {
+describe('Cross-Platform Validation', () => {
 	describe('Platform Detection', () => {
 		it('should detect current platform correctly', () => {
 			const platform = getPlatformInfo();
@@ -79,51 +77,51 @@ describe('Cross-Platform Validation (AC1, AC2, AC3)', () => {
 		});
 	});
 
-	describe('Path Handling - macOS (AC1)', () => {
+	describe('Path Handling - macOS', () => {
 		it('should handle Unix forward slash paths', () => {
-			const path = '/Users/nick/Documents/readme.md';
+			const path = '/Users/developer/Documents/readme.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toBeTruthy();
 		});
 
-		it('should handle paths with spaces (AC1)', () => {
-			const path = '/Users/nick/My Documents/readme.md';
+		it('should handle paths with spaces', () => {
+			const path = '/Users/developer/My Documents/readme.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toContain('My Documents');
 		});
 
 		it('should handle paths with special characters', () => {
-			const path = '/Users/nick/docs/file-name_v1.2.md';
+			const path = '/Users/developer/docs/file-name_v1.2.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toContain('file-name_v1.2');
 		});
 
 		it('should convert to vscode.Uri safely', () => {
-			const path = '/Users/nick/Documents/readme.md';
+			const path = '/Users/developer/Documents/readme.md';
 			const uri = toVscodeUri(path);
 			expect(uri.fsPath).toBe(path);
 		});
 
 		it('should detect Unix path as not Windows path', () => {
-			expect(isWindowsPath('/Users/nick/file.md')).toBe(false);
+			expect(isWindowsPath('/Users/developer/file.md')).toBe(false);
 		});
 	});
 
-	describe('Path Handling - Windows (AC2)', () => {
+	describe('Path Handling - Windows', () => {
 		it('should handle Windows backslash paths', () => {
-			const path = 'C:\\Users\\nick\\Documents\\readme.md';
+			const path = 'C:\\Users\\developer\\Documents\\readme.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toBeTruthy();
 		});
 
-		it('should handle Windows paths with spaces (AC2)', () => {
-			const path = 'C:\\Users\\nick\\My Documents\\readme.md';
+		it('should handle Windows paths with spaces', () => {
+			const path = 'C:\\Users\\developer\\My Documents\\readme.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toBeTruthy();
 		});
 
 		it('should detect Windows drive letter paths', () => {
-			expect(isWindowsPath('C:\\Users\\nick\\file.md')).toBe(true);
+			expect(isWindowsPath('C:\\Users\\developer\\file.md')).toBe(true);
 			expect(isWindowsPath('D:\\Projects\\test.md')).toBe(true);
 		});
 
@@ -132,27 +130,27 @@ describe('Cross-Platform Validation (AC1, AC2, AC3)', () => {
 		});
 
 		it('should convert backslashes to forward slashes', () => {
-			const path = 'C:\\Users\\nick\\file.md';
+			const path = 'C:\\Users\\developer\\file.md';
 			const converted = toForwardSlashes(path);
-			expect(converted).toBe('C:/Users/nick/file.md');
+			expect(converted).toBe('C:/Users/developer/file.md');
 		});
 	});
 
-	describe('Path Handling - Linux (AC3)', () => {
+	describe('Path Handling - Linux', () => {
 		it('should handle Linux forward slash paths', () => {
-			const path = '/home/nick/Documents/readme.md';
+			const path = '/home/developer/Documents/readme.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toBeTruthy();
 		});
 
 		it('should handle paths with spaces', () => {
-			const path = '/home/nick/my documents/readme.md';
+			const path = '/home/developer/my documents/readme.md';
 			const normalized = normalizePath(path);
 			expect(normalized).toContain('my documents');
 		});
 
 		it('should detect Linux path as not Windows path', () => {
-			expect(isWindowsPath('/home/nick/file.md')).toBe(false);
+			expect(isWindowsPath('/home/developer/file.md')).toBe(false);
 		});
 	});
 
@@ -163,8 +161,8 @@ describe('Cross-Platform Validation (AC1, AC2, AC3)', () => {
 		});
 
 		it('should allow safe paths', () => {
-			expect(validateNoTraversal('/Users/nick/Documents/readme.md')).toBe(true);
-			expect(validateNoTraversal('C:\\Users\\nick\\file.md')).toBe(true);
+			expect(validateNoTraversal('/Users/developer/Documents/readme.md')).toBe(true);
+			expect(validateNoTraversal('C:\\Users\\developer\\file.md')).toBe(true);
 		});
 
 		it('should reject empty paths', () => {
@@ -175,9 +173,9 @@ describe('Cross-Platform Validation (AC1, AC2, AC3)', () => {
 
 	describe('Cross-Platform Path Conversion', () => {
 		it('should convert forward slashes to backslashes', () => {
-			const path = '/home/nick/file.md';
+			const path = '/home/developer/file.md';
 			const converted = toBackslashes(path);
-			expect(converted).toBe('\\home\\nick\\file.md');
+			expect(converted).toBe('\\home\\developer\\file.md');
 		});
 
 		it('should handle mixed separators in Windows path detection', () => {
@@ -189,7 +187,7 @@ describe('Cross-Platform Validation (AC1, AC2, AC3)', () => {
 	});
 });
 
-describe('Line Ending Handling (AC2 - Windows CRLF)', () => {
+describe('Line Ending Handling', () => {
 	it('should handle CRLF line endings in diff computation', async () => {
 		// Import DiffComputer for line ending test
 		const { DiffComputer } = await import('../../src/diff/diffComputer');
@@ -230,7 +228,7 @@ describe('Line Ending Handling (AC2 - Windows CRLF)', () => {
 	});
 });
 
-describe('Keyboard Shortcut Configuration (AC1, AC2, AC3)', () => {
+describe('Keyboard Shortcut Configuration', () => {
 	it('should have platform-aware keybindings in package.json', async () => {
 		const { readFileSync } = await import('fs');
 		const { join } = await import('path');

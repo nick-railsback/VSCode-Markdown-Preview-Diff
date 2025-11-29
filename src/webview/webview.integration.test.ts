@@ -142,7 +142,7 @@ describe('Webview Integration Tests', () => {
 			const renderResult: RenderResult = {
 				beforeHtml: beforeResult.success ? beforeResult.html : '',
 				afterHtml: afterResult.success ? afterResult.html : '',
-				changes: [], // DiffComputer not integrated yet (Story 2.5)
+				changes: [], // DiffComputer not integrated yet
 			};
 
 			// Step 3: Create webview panel
@@ -259,7 +259,7 @@ describe('Webview Integration Tests', () => {
 			const renderResult: RenderResult = {
 				beforeHtml: '<p>Hello world</p>',
 				afterHtml: '<p>Hello beautiful world</p>',
-				changes: [], // Will be mapped from diffResult in Story 2.5
+				changes: [], // Will be mapped from diffResult in 
 			};
 
 			expect(renderResult).toBeDefined();
@@ -356,9 +356,9 @@ describe('Webview Integration Tests', () => {
 		});
 	});
 
-	// Story 4.4 - Toolbar navigation button integration tests
+	// Toolbar navigation button integration tests
 	describe('Toolbar navigation buttons integration', () => {
-		it('should render toolbar with navigation buttons when changes exist (AC1, AC2, AC3)', () => {
+		it('should render toolbar with navigation buttons when changes exist', () => {
 			const renderResult: RenderResult = {
 				beforeHtml: '<p>Before</p>',
 				afterHtml: '<p>After</p>',
@@ -378,14 +378,14 @@ describe('Webview Integration Tests', () => {
 			expect(html).toContain('id="next-change"');
 			expect(html).toContain('id="change-counter"');
 
-			// Verify button attributes for accessibility (AC2, AC3, AC7)
+			// Verify button attributes for accessibility
 			expect(html).toContain('aria-label="Previous Change"');
 			expect(html).toContain('aria-label="Next Change"');
 			expect(html).toContain('title="Previous Change (p)"');
 			expect(html).toContain('title="Next Change (n)"');
 		});
 
-		it('should show correct initial counter with changes (AC4, AC9)', () => {
+		it('should show correct initial counter with changes', () => {
 			const renderResult: RenderResult = {
 				beforeHtml: '<p>Before</p>',
 				afterHtml: '<p>After</p>',
@@ -402,7 +402,7 @@ describe('Webview Integration Tests', () => {
 			expect(html).toContain('Change 1 of 3');
 		});
 
-		it('should show "No changes" and disabled buttons when no changes (AC4, AC8)', () => {
+		it('should show "No changes" and disabled buttons when no changes', () => {
 			const renderResult: RenderResult = {
 				beforeHtml: '<p>Before</p>',
 				afterHtml: '<p>After</p>',
@@ -414,12 +414,12 @@ describe('Webview Integration Tests', () => {
 			const html = mockPanel.webview.html;
 			expect(html).toContain('No changes');
 
-			// Verify buttons are disabled (AC8)
+			// Verify buttons are disabled
 			expect(html).toMatch(/id="prev-change"[^>]*disabled/);
 			expect(html).toMatch(/id="next-change"[^>]*disabled/);
 		});
 
-		it('should enable buttons when there are changes (AC9)', () => {
+		it('should enable buttons when there are changes', () => {
 			const renderResult: RenderResult = {
 				beforeHtml: '<p>Before</p>',
 				afterHtml: '<p>After</p>',

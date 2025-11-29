@@ -31,7 +31,7 @@ export function validateFilePath(filePath: string, workspaceRoot: string): strin
 		);
 	}
 
-	// Normalize path for cross-platform handling (FR52)
+	// Normalize path for cross-platform handling
 	const normalized = path.normalize(filePath);
 
 	// Ensure path is absolute (required for workspace boundary check)

@@ -12,3 +12,17 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+
+# Development workflow files
+.bmad/**
+.claude/**
+docs/**
+
+# Testing and CI artifacts
+coverage/**
+*.vsix
+
+# Development configuration
+.eslintrc*
+vitest.config*
+jest.config*

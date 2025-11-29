@@ -1,14 +1,14 @@
 /**
- * Error Handling Integration Tests (Story 5.3)
+ * Error Handling Integration Tests
  *
  * Tests for comprehensive error handling across all edge cases:
- * - AC1: Not in git repository error
- * - AC2: No changes detected info message
- * - AC3: Markdown rendering failure
- * - AC4: Large file handling with timeout
- * - AC5: Missing image placeholder
- * - AC6: Git operation failure with actionable messages
- * - AC7: Centralized error handler utility
+ * - Not in git repository error
+ * - No changes detected info message
+ * - Markdown rendering failure
+ * - Large file handling with timeout
+ * - Missing image placeholder
+ * - Git operation failure with actionable messages
+ * - Centralized error handler utility
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
@@ -50,16 +50,16 @@ import {
 } from '../utils/errorHandler';
 import { GitError, GitErrorType } from '../types/git.types';
 
-describe('Error Handling Integration Tests (Story 5.3)', () => {
+describe('Error Handling Integration Tests', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	describe('AC1: Not in Git Repository Error', () => {
+	describe('Not in Git Repository Error', () => {
 		it('should show error message when file is not in git repository', async () => {
 			const vscode = await import('vscode');
 
-			// AC1: Error message should contain "not in a git repository"
+			// Error message should contain "not in a git repository"
 			showError(
 				'This file is not in a git repository. Preview Diff requires git version control.',
 				'/path/to/file.md'
@@ -86,11 +86,11 @@ describe('Error Handling Integration Tests (Story 5.3)', () => {
 		});
 	});
 
-	describe('AC2: No Changes Detected Info Message', () => {
+	describe('No Changes Detected Info Message', () => {
 		it('should show info message when files are identical', async () => {
 			const vscode = await import('vscode');
 
-			// AC2: Info message for no changes
+			// Info message for no changes
 			showInfo('No changes detected. The working file is identical to the committed version.');
 
 			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
@@ -102,12 +102,12 @@ describe('Error Handling Integration Tests (Story 5.3)', () => {
 			vi.clearAllMocks();
 			showInfo('No changes detected. The working file is identical to the committed version.');
 
-			// Info messages should NOT be logged (per AC7 spec)
+			// Info messages should NOT be logged to output channel
 			expect(mockOutputChannel.appendLine).not.toHaveBeenCalled();
 		});
 	});
 
-	describe('AC3: Markdown Rendering Failure Error', () => {
+	describe('Markdown Rendering Failure Error', () => {
 		it('should show error with syntax check message when rendering fails', async () => {
 			const vscode = await import('vscode');
 
@@ -137,7 +137,7 @@ describe('Error Handling Integration Tests (Story 5.3)', () => {
 		});
 	});
 
-	describe('AC4: Large File Handling with Timeout', () => {
+	describe('Large File Handling with Timeout', () => {
 		it('should show warning for large files', async () => {
 			const vscode = await import('vscode');
 
@@ -166,7 +166,7 @@ describe('Error Handling Integration Tests (Story 5.3)', () => {
 		});
 	});
 
-	describe('AC5: Missing Image Error Logging', () => {
+	describe('Missing Image Error Logging', () => {
 		it('should log missing image path without showing to user', async () => {
 			const vscode = await import('vscode');
 			const error = new Error('ENOENT: no such file or directory');
@@ -193,7 +193,7 @@ describe('Error Handling Integration Tests (Story 5.3)', () => {
 		});
 	});
 
-	describe('AC6: Git Operation Failure with Actionable Messages', () => {
+	describe('Git Operation Failure with Actionable Messages', () => {
 		it('should show actionable error for git not installed', async () => {
 			const vscode = await import('vscode');
 			const error = new GitError(
@@ -269,7 +269,7 @@ describe('Error Handling Integration Tests (Story 5.3)', () => {
 		});
 	});
 
-	describe('AC7: Centralized Error Handler Integration', () => {
+	describe('Centralized Error Handler Integration', () => {
 		it('should route all error types through showError', async () => {
 			const vscode = await import('vscode');
 

@@ -22,7 +22,7 @@ export interface InitializeMessage {
 export interface UpdateDiffMessage {
 	type: 'updateDiff';
 	data: RenderResult;
-	/** When true, webview should preserve scroll position (Story 4.5, AC7) */
+	/** When true, webview should preserve scroll position */
 	preserveScroll?: boolean;
 }
 
@@ -42,7 +42,7 @@ export interface ErrorMessage {
 }
 
 /**
- * Message sent when no changes are detected (Story 4.5, AC3, AC4)
+ * Message sent when no changes are detected
  * Displayed after commit/stash when working copy matches HEAD
  */
 export interface NoChangesMessage {

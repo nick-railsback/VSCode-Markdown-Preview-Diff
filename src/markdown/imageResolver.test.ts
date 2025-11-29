@@ -1,8 +1,8 @@
 /**
  * Unit tests for ImageResolver
  *
- * Tests FR16 (image path resolution) with security validation.
- * Coverage target: > 90% per Story 2.2 requirements.
+ * Tests image path resolution with security validation.
+ * Coverage target: > 90%.
  */
 
 import { describe, it, expect, vi } from 'vitest';

@@ -2,7 +2,6 @@
  * Integration tests for cross-platform path handling
  *
  * Tests end-to-end path handling across git, image resolution, and webview components.
- * Implements AC4-AC6 (Windows paths, Unix paths, Relative paths).
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -80,7 +79,7 @@ describe('Cross-Platform Path Handling Integration', () => {
 		mockReadFile.mockResolvedValue(new TextEncoder().encode('# Test'));
 	});
 
-	describe('Unix path scenarios (AC5)', () => {
+	describe('Unix path scenarios', () => {
 		it('should validate Unix absolute paths within workspace', () => {
 			const unixPath = '/workspace/root/src/extension.ts';
 			const result = validateFilePath(unixPath, workspaceRoot);
@@ -109,15 +108,15 @@ describe('Cross-Platform Path Handling Integration', () => {
 		});
 
 		it('should handle macOS-style paths', () => {
-			const macPath = '/Users/nick/Library/Application Support/Code/settings.json';
+			const macPath = '/Users/developer/Library/Application Support/Code/settings.json';
 			// This should fail validation since it's outside workspace
 			expect(() => validateFilePath(macPath, workspaceRoot)).toThrow(GitError);
 		});
 	});
 
-	describe('Windows path detection (AC4)', () => {
+	describe('Windows path detection', () => {
 		it('should detect Windows drive letter paths', () => {
-			expect(isWindowsPath('C:\\Users\\nick\\file.md')).toBe(true);
+			expect(isWindowsPath('C:\\Users\\developer\\file.md')).toBe(true);
 			expect(isWindowsPath('D:\\Projects\\markdown-diff\\README.md')).toBe(true);
 		});
 
@@ -126,18 +125,18 @@ describe('Cross-Platform Path Handling Integration', () => {
 		});
 
 		it('should not misidentify Unix paths as Windows', () => {
-			expect(isWindowsPath('/home/nick/file.md')).toBe(false);
-			expect(isWindowsPath('/Users/nick/Documents/file.md')).toBe(false);
+			expect(isWindowsPath('/home/developer/file.md')).toBe(false);
+			expect(isWindowsPath('/Users/developer/Documents/file.md')).toBe(false);
 		});
 
 		it('should normalize Windows backslash paths', () => {
-			const windowsPath = 'C:\\Users\\nick\\docs\\file.md';
+			const windowsPath = 'C:\\Users\\developer\\docs\\file.md';
 			const normalized = normalizePath(windowsPath);
 			expect(normalized).toBeTruthy();
 		});
 	});
 
-	describe('Relative path resolution (AC6)', () => {
+	describe('Relative path resolution', () => {
 		it('should resolve ./ relative paths from markdown directory', () => {
 			const relativePath = './diagram.png';
 			const result = resolveImagePath(relativePath, workspaceRoot, markdownFilePath);
@@ -203,8 +202,8 @@ describe('Cross-Platform Path Handling Integration', () => {
 		});
 
 		it('should convert Windows path to vscode.Uri', () => {
-			const uri = toVscodeUri('C:\\Users\\nick\\file.md');
-			expect(uri.fsPath).toBe('C:\\Users\\nick\\file.md');
+			const uri = toVscodeUri('C:\\Users\\developer\\file.md');
+			expect(uri.fsPath).toBe('C:\\Users\\developer\\file.md');
 		});
 
 		it('should handle paths with Unicode', () => {

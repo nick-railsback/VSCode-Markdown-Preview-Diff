@@ -18,7 +18,7 @@ describe('ChangeNavigator', () => {
 		}));
 	};
 
-	describe('Constructor and State Initialization (AC2)', () => {
+	describe('Constructor and State Initialization', () => {
 		it('should initialize with changeLocations array', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
@@ -54,7 +54,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Navigate to Next Change (AC3)', () => {
+	describe('Navigate to Next Change', () => {
 		it('should increment index from 0 to 1', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
@@ -81,7 +81,7 @@ describe('ChangeNavigator', () => {
 			}
 		});
 
-		it('should wrap to first change when at last change (AC3)', () => {
+		it('should wrap to first change when at last change', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
 
@@ -101,7 +101,7 @@ describe('ChangeNavigator', () => {
 			expect(navigator.getCurrentIndex()).toBe(0);
 		});
 
-		it('should return null for empty array (AC3)', () => {
+		it('should return null for empty array', () => {
 			const navigator = new ChangeNavigator([]);
 
 			const next = navigator.goToNext();
@@ -131,7 +131,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Navigate to Previous Change (AC4)', () => {
+	describe('Navigate to Previous Change', () => {
 		it('should decrement index from 2 to 1', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
@@ -166,7 +166,7 @@ describe('ChangeNavigator', () => {
 			}
 		});
 
-		it('should wrap to last change when at first change (AC4)', () => {
+		it('should wrap to last change when at first change', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
 
@@ -180,7 +180,7 @@ describe('ChangeNavigator', () => {
 			expect(navigator.getCurrentIndex()).toBe(4);
 		});
 
-		it('should return null for empty array (AC4)', () => {
+		it('should return null for empty array', () => {
 			const navigator = new ChangeNavigator([]);
 
 			const prev = navigator.goToPrevious();
@@ -214,7 +214,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Get Current Change (AC5)', () => {
+	describe('Get Current Change', () => {
 		it('should return current ChangeLocation at index 0', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
@@ -250,7 +250,7 @@ describe('ChangeNavigator', () => {
 			expect(current?.id).toBe('change-4');
 		});
 
-		it('should return null when no changes exist (AC5)', () => {
+		it('should return null when no changes exist', () => {
 			const navigator = new ChangeNavigator([]);
 
 			const current = navigator.getCurrentChange();
@@ -271,7 +271,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Get Current Index (AC6)', () => {
+	describe('Get Current Index', () => {
 		it('should return 0-based index at various positions', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
@@ -311,7 +311,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Get Total Changes (AC7)', () => {
+	describe('Get Total Changes', () => {
 		it('should return 0 for empty array', () => {
 			const navigator = new ChangeNavigator([]);
 			expect(navigator.getTotalChanges()).toBe(0);
@@ -350,7 +350,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Reset to First Change (AC8)', () => {
+	describe('Reset to First Change', () => {
 		it('should reset index to 0 from index 3', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);
@@ -417,7 +417,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Empty Changes Array Handling (AC9)', () => {
+	describe('Empty Changes Array Handling', () => {
 		it('should return null for goToNext with empty array', () => {
 			const navigator = new ChangeNavigator([]);
 
@@ -469,7 +469,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('Integration with DiffHighlighter Output (AC10)', () => {
+	describe('Integration with DiffHighlighter Output', () => {
 		it('should preserve all change IDs from DiffHighlighter', () => {
 			const changeLocations: ChangeLocation[] = [
 				{ id: 'change-0', beforeOffset: 100, afterOffset: 100, type: 'added' },
@@ -551,7 +551,7 @@ describe('ChangeNavigator', () => {
 		});
 	});
 
-	describe('State Management (AC2)', () => {
+	describe('State Management', () => {
 		it('should maintain state across navigation operations', () => {
 			const changeLocations = createTestChangeLocations(5);
 			const navigator = new ChangeNavigator(changeLocations);

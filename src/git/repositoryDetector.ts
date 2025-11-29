@@ -38,7 +38,6 @@ export class RepositoryDetector {
 	 * Checks if a file is within a git repository
 	 *
 	 * Validates file path security before checking repository status.
-	 * Implements FR37 (detect git repository) and FR53 (error if not in repo).
 	 *
 	 * @param filePath - Absolute path to file
 	 * @returns true if file is in a git repository, false otherwise

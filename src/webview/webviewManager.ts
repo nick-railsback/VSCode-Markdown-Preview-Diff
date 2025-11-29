@@ -22,12 +22,12 @@ export class WebviewManager {
 
 	/**
 	 * Create a new diff panel or reuse existing one
-	 * Implements single active panel pattern (ADR-009)
+	 * Implements single active panel pattern
 	 * @param context - Extension context
 	 * @param renderResult - Rendered diff content
 	 * @param changeNavigator - Optional ChangeNavigator for navigation commands
-	 * @param filePath - Path to tracked file for real-time updates (Story 4.5)
-	 * @param comparisonTarget - Comparison target for panel title (Story 5.1, AC2)
+	 * @param filePath - Path to tracked file for real-time updates
+	 * @param comparisonTarget - Comparison target for panel title
 	 */
 	public static createDiffPanel(
 		context: vscode.ExtensionContext,
@@ -46,7 +46,7 @@ export class WebviewManager {
 			WebviewManager.changeNavigator = undefined;
 		}
 
-		// Dispose previous DiffUpdateManager (Story 4.5, AC9)
+		// Dispose previous DiffUpdateManager
 		if (WebviewManager.diffUpdateManager) {
 			WebviewManager.diffUpdateManager.dispose();
 			WebviewManager.diffUpdateManager = undefined;
@@ -58,13 +58,13 @@ export class WebviewManager {
 			WebviewManager.configChangeDisposable = undefined;
 		}
 
-		// Store tracked file path (Story 4.5)
+		// Store tracked file path for real-time updates
 		WebviewManager.trackedFilePath = filePath;
 
 		// Store change navigator for navigation commands
 		WebviewManager.changeNavigator = changeNavigator;
 
-		// Create webview panel with dynamic title based on comparison target (AC2)
+		// Create webview panel with dynamic title based on comparison target
 		const panelTitle = `Markdown Preview Diff: ${comparisonTarget} vs Working`;
 		const panel = vscode.window.createWebviewPanel(
 			'markdownPreviewDiff',
@@ -81,7 +81,7 @@ export class WebviewManager {
 
 		WebviewManager.activePanel = panel;
 
-		// Set context for command availability (AC11)
+		// Set context for command availability
 		vscode.commands.executeCommand('setContext', 'markdown.previewDiff.panelActive', true);
 
 		// Set HTML content
@@ -100,7 +100,7 @@ export class WebviewManager {
 			context.subscriptions
 		);
 
-		// Listen for configuration changes via ConfigurationService (AC6: runtime config updates)
+		// Listen for configuration changes via ConfigurationService
 		const configService = ConfigurationService.getInstance();
 		WebviewManager.configChangeDisposable = configService.onDidChangeConfiguration((config) => {
 			logDebug(`WebviewManager: Configuration changed - syncScroll: ${config.syncScroll}, highlightStyle: ${config.highlightStyle}`);
@@ -114,7 +114,7 @@ export class WebviewManager {
 		});
 		context.subscriptions.push(WebviewManager.configChangeDisposable);
 
-		// Initialize DiffUpdateManager for real-time updates (Story 4.5)
+		// Initialize DiffUpdateManager for real-time updates
 		if (filePath) {
 			WebviewManager.diffUpdateManager = new DiffUpdateManager(
 				filePath,
@@ -137,7 +137,7 @@ export class WebviewManager {
 				WebviewManager.messageHandler = undefined;
 				WebviewManager.changeNavigator = undefined;
 				WebviewManager.trackedFilePath = undefined;
-				// Clean up DiffUpdateManager (Story 4.5, AC9)
+				// Clean up DiffUpdateManager
 				if (WebviewManager.diffUpdateManager) {
 					WebviewManager.diffUpdateManager.dispose();
 					WebviewManager.diffUpdateManager = undefined;
@@ -147,7 +147,7 @@ export class WebviewManager {
 					WebviewManager.configChangeDisposable.dispose();
 					WebviewManager.configChangeDisposable = undefined;
 				}
-				// Clear context for command availability (AC11)
+				// Clear context for command availability
 				vscode.commands.executeCommand('setContext', 'markdown.previewDiff.panelActive', false);
 			},
 			null,

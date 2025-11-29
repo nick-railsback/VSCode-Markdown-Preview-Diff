@@ -1,5 +1,5 @@
 /**
- * Open Preview Diff Command - Main command handler for Epic 2
+ * Open Preview Diff Command - Main command handler
  *
  * Orchestrates the complete workflow:
  * 1. Validate file and repository
@@ -8,8 +8,6 @@
  * 4. Compute text diff
  * 5. Render both versions to HTML
  * 6. Create webview panel with side-by-side display
- *
- * Implements FR1-FR3, FR53-FR56, FR60-FR64 (command invocation, error handling, performance)
  */
 
 import * as vscode from 'vscode';
@@ -26,8 +24,6 @@ import { logDebug, logInfo, logError, logPerformance, logPerformanceWarning, log
 
 /**
  * Main command handler: Markdown: Open Preview Diff
- *
- * Implements AC-1 through AC-8 from Epic 2 Tech Spec
  * @param context - Extension context passed from activation
  */
 export async function openPreviewDiff(context: vscode.ExtensionContext): Promise<void> {
@@ -36,7 +32,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 	logDebug('[openPreviewDiff] Command invoked');
 
 	try {
-		// **STEP 1: Get active editor and validate** (FR5, Task 2)
+		// Get active editor and validate
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
 			showError('No active editor found. Open a markdown file first.');
@@ -52,12 +48,11 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 		const filePath = document.uri.fsPath;
 		logInfo(`[openPreviewDiff] Processing file: ${filePath}`);
 
-		// **STEP 2: Check if in git repository** (FR37, FR53, Task 2)
+		// Check if in git repository
 		const gitService = GitService.getInstance();
 		const isInRepo = await gitService.isInRepository(filePath);
 
 		if (!isInRepo) {
-			// AC1 (FR53): Not in git repository error handling via centralized errorHandler
 			showError(
 				'This file is not in a git repository. Preview Diff requires git version control.',
 				`File: ${filePath}`
@@ -65,7 +60,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 			return;
 		}
 
-		// Show progress indicator during async operations (FR56)
+		// Show progress indicator during async operations
 		await vscode.window.withProgress(
 			{
 				location: vscode.ProgressLocation.Notification,
@@ -73,10 +68,10 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				cancellable: false
 			},
 			async (progress) => {
-				// **STEP 3: Retrieve file versions in parallel** (Task 3, NFR-P5)
+				// Retrieve file versions in parallel
 				progress.report({ increment: 20, message: 'Retrieving file versions...' });
 
-				// Get comparison target from configuration (AC2, FR43)
+				// Get comparison target from configuration
 				const configService = ConfigurationService.getInstance();
 				const comparisonTarget = configService.get('defaultComparisonTarget');
 				logDebug(`[openPreviewDiff] Retrieving ${comparisonTarget} and working versions`);
@@ -93,34 +88,32 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				]);
 				perfMarks.gitRetrieval = Date.now() - gitStart;
 
-				const beforeContent = baseVersion ?? ''; // New file: use empty string (FR42)
+				const beforeContent = baseVersion ?? ''; // New file: use empty string
 				logInfo(
 					`[openPreviewDiff] Retrieved versions - ${comparisonTarget}: ${beforeContent.length} chars, Working: ${workingVersion.length} chars`
 				);
 
-				// **STEP 3.5: Check file size and warn for large files** (FR57, Task 7)
+				// Check file size and warn for large files
 				const MAX_OPTIMAL_SIZE = 100 * 1024; // 100KB
 				const fileSize = Buffer.from(workingVersion).length;
 
 				if (fileSize > MAX_OPTIMAL_SIZE) {
 					const fileSizeKB = (fileSize / 1024).toFixed(1);
-					// AC4: Large file handling via centralized errorHandler
 					showWarning(
 						`Large file detected (${fileSizeKB} KB). Rendering may take longer than usual.`,
 						`File: ${filePath}, Size: ${fileSizeKB} KB, Threshold: ${MAX_OPTIMAL_SIZE / 1024} KB`
 					);
 				}
 
-				// **STEP 4: Check if identical** (FR54, AC2, Task 4)
+				// Check if identical
 				if (beforeContent === workingVersion) {
-					// AC2: No changes detected info message via centralized errorHandler
 					showInfo('No changes detected. The working file is identical to the committed version.');
 					return;
 				}
 
-				// **STEP 5: Render markdown FIRST** (FR12-FR20, Task 6)
+				// Render markdown first
 				// Note: We render first, then diff the rendered text content
-				// This ensures diff positions align with HTML text positions (Story 4.2b fix)
+				// This ensures diff positions align with HTML text positions
 				progress.report({ increment: 30, message: 'Rendering markdown...' });
 				logDebug('[openPreviewDiff] Rendering markdown to HTML');
 
@@ -141,7 +134,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				]);
 				perfMarks.markdownRendering = Date.now() - renderStart;
 
-				// Check for rendering errors (FR55, AC3)
+				// Check for rendering errors
 				if (!beforeResult.success) {
 					showError(
 						`Failed to render markdown. Check file syntax. ${beforeResult.error || 'Unknown error'}`,
@@ -160,7 +153,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 
 				logInfo('[openPreviewDiff] Markdown rendered successfully');
 
-				// **STEP 6: Compute diff on rendered HTML text content** (Task 5, Story 4.2b fix)
+				// Compute diff on rendered HTML text content
 				// Extract text from HTML and diff that - ensures positions align with HTML
 				progress.report({ increment: 20, message: 'Computing diff...' });
 				logDebug('[openPreviewDiff] Computing text diff on rendered HTML content');
@@ -180,7 +173,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 					`[openPreviewDiff] Diff computed - ${diffResult.changeCount} changes (${diffResult.addedLines} added, ${diffResult.removedLines} removed)`
 				);
 
-				// **STEP 6.5: Apply diff highlighting** (Epic 3, Story 3.1)
+				// Apply diff highlighting
 				progress.report({ increment: 10, message: 'Applying diff highlighting...' });
 				logDebug('[openPreviewDiff] Applying diff highlighting');
 
@@ -203,7 +196,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 
 					logInfo(`[openPreviewDiff] Diff highlighting applied - ${highlightedResult.changeLocations.length} change locations tracked`);
 				} catch (highlightError) {
-					// Graceful degradation (AC15)
+					// Graceful degradation
 					logError('Diff highlighting failed, showing unhighlighted diff', highlightError as Error);
 					highlightedResult = {
 						beforeHtml: beforeResult.html,
@@ -213,25 +206,23 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 					perfMarks.diffHighlighting = Date.now() - highlightStart;
 				}
 
-				// **STEP 6.75: Initialize ChangeNavigator** (Epic 3, Story 3.2)
-				// ChangeNavigator tracks change locations for Epic 4 navigation commands
+				// Initialize ChangeNavigator for navigation commands
 				logDebug('[openPreviewDiff] Initializing ChangeNavigator');
 				const changeNavigator = new ChangeNavigator(highlightedResult.changeLocations);
 				logInfo(`[openPreviewDiff] ChangeNavigator initialized - ${changeNavigator.getTotalChanges()} changes tracked`);
 
-				// **STEP 7: Assemble RenderResult** (Task 7)
+				// Assemble RenderResult
 				const renderResult: RenderResult = {
 					beforeHtml: highlightedResult.beforeHtml,
 					afterHtml: highlightedResult.afterHtml,
 					changes: highlightedResult.changeLocations
 				};
 
-				// **STEP 8: Create webview panel** (FR6-FR11, Task 8)
+				// Create webview panel
 				progress.report({ increment: 30, message: 'Creating diff view...' });
 				logDebug('[openPreviewDiff] Creating webview panel');
 
 				const webviewStart = Date.now();
-				// Pass changeNavigator, filePath, and comparisonTarget to WebviewManager for Epic 4 navigation, Story 4.5 real-time updates, and Story 5.1 config
 				WebviewManager.createDiffPanel(context, renderResult, changeNavigator, filePath, comparisonTarget);
 				perfMarks.webviewInit = Date.now() - webviewStart;
 
@@ -244,7 +235,7 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 				logPerformance('webviewInit', perfMarks.webviewInit);
 				logPerformance('total', total);
 
-				// Warn if exceeding targets (NFR-O1)
+				// Warn if exceeding performance targets
 				if (perfMarks.gitRetrieval > 500) {
 					logPerformanceWarning('gitRetrieval', perfMarks.gitRetrieval, 500);
 				}
@@ -265,10 +256,8 @@ export async function openPreviewDiff(context: vscode.ExtensionContext): Promise
 			}
 		);
 	} catch (error) {
-		// **Error Handling** (FR53, FR55, FR59, NFR-R1)
-		// Story 5.3: Route all errors through centralized errorHandler
+		// Route all errors through centralized errorHandler
 		if (error instanceof GitError) {
-			// Git-specific error handling via centralized handler (FR53, FR59)
 			handleGitError(error, 'opening preview diff');
 		} else if (error instanceof Error) {
 			// Generic error via centralized handler

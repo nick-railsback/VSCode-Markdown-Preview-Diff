@@ -244,7 +244,7 @@ describe('ErrorHandler - Performance Logging', () => {
 	});
 });
 
-describe('ErrorHandler - AC7 Centralized Error Handler API', () => {
+describe('ErrorHandler - Centralized Error Handler API', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});

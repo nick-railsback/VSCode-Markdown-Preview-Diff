@@ -1,9 +1,6 @@
 /**
  * VS Code Version Compatibility Tests
  *
- * Story 5.4: Validate Performance and Reliability Across Platforms
- * AC7: VS Code Version Compatibility
- *
  * Tests that the extension works correctly with VS Code 1.60+
  * and doesn't use deprecated APIs.
  */
@@ -12,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-describe('VS Code Version Compatibility (AC7)', () => {
+describe('VS Code Version Compatibility', () => {
 	describe('Engine Requirements', () => {
 		it('should declare minimum VS Code version 1.60.0', () => {
 			const packageJsonPath = join(process.cwd(), 'package.json');
@@ -137,7 +134,7 @@ describe('VS Code Version Compatibility (AC7)', () => {
 	});
 });
 
-describe('Test Coverage Baseline (AC6)', () => {
+describe('Test Coverage Baseline', () => {
 	it('should maintain minimum test count of 476 tests', async () => {
 		// This is a meta-test that documents the baseline
 		// Actual test count is verified when running the full test suite
@@ -149,7 +146,7 @@ describe('Test Coverage Baseline (AC6)', () => {
 	});
 });
 
-describe('Deprecation Warning Check (AC7)', () => {
+describe('Deprecation Warning Check', () => {
 	it('should not use deprecated window.createStatusBarItem signature', async () => {
 		// Search for any status bar usage in our source files (not test files or node_modules)
 		const { globSync } = await import('glob');
@@ -200,6 +197,7 @@ describe('Deprecation Warning Check (AC7)', () => {
 			ignore: ['**/node_modules/**', '**/*.test.ts', '**/test/**']
 		});
 
+		const filesUsingUriParse: string[] = [];
 		for (const file of files) {
 			const content = readFileSync(join(process.cwd(), file), 'utf-8');
 			// Should not use deprecated Uri.parse for file paths
@@ -207,12 +205,11 @@ describe('Deprecation Warning Check (AC7)', () => {
 			// This is a best practice check
 			const hasFilePathParsing = /Uri\.parse\(['"](file:)?\//.test(content);
 			if (hasFilePathParsing) {
-				// Log warning but don't fail - might be intentional
-				console.warn(`${file} may use Uri.parse for file paths, consider Uri.file()`);
+				filesUsingUriParse.push(file);
 			}
 		}
 
-		// Extension follows best practices
-		expect(true).toBe(true);
+		// Extension follows best practices - no files should use Uri.parse for file paths
+		expect(filesUsingUriParse).toEqual([]);
 	});
 });

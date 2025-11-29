@@ -4,12 +4,12 @@ import { logDebug, logInfo } from '../utils/errorHandler';
 
 /**
  * Navigate to the next change in the diff panel
- * Implements AC3 (Navigate to Next Change via Keyboard) and AC5 (Navigation Wrapping at End)
+ * Handles navigation wrapping at end
  */
 export async function nextChange(): Promise<void> {
 	logDebug('[nextChange] Command invoked');
 
-	// Check if there's an active diff panel (AC11)
+	// Check if there's an active diff panel
 	if (!WebviewManager.hasActivePanel()) {
 		vscode.window.showInformationMessage('No diff panel open');
 		return;
@@ -23,7 +23,7 @@ export async function nextChange(): Promise<void> {
 		return;
 	}
 
-	// Check if there are any changes (AC12)
+	// Check if there are any changes
 	if (changeNavigator.getTotalChanges() === 0) {
 		vscode.window.showInformationMessage('No changes to navigate');
 		return;

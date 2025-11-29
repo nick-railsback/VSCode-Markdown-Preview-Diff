@@ -1,8 +1,7 @@
 /**
  * Performance Benchmark Tests
  *
- * Tests that verify performance targets are met per Story 2.6 acceptance criteria.
- * Validates NFR-P1 through NFR-P7 performance requirements.
+ * Tests that verify performance targets are met for the extension.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -42,12 +41,12 @@ import { MarkdownRenderer } from '../../src/markdown/markdownRenderer';
 
 // Performance thresholds from architecture document
 const PERFORMANCE_TARGETS = {
-	gitRetrieval: 500,      // AC2: < 500ms
-	diffComputation: 500,   // AC2: < 500ms
-	markdownRendering: 1000, // AC3: < 1000ms
-	webviewInit: 500,       // AC4: < 500ms
-	total10KB: 2000,        // AC5: < 2000ms for files < 10KB
-	total100KB: 5000        // AC6: < 5000ms for files up to 100KB
+	gitRetrieval: 500,      // < 500ms
+	diffComputation: 500,   // < 500ms
+	markdownRendering: 1000, // < 1000ms
+	webviewInit: 500,       // < 500ms
+	total10KB: 2000,        // < 2000ms for files < 10KB
+	total100KB: 5000        // < 5000ms for files up to 100KB
 };
 
 /**
@@ -122,7 +121,7 @@ function generateModifiedMarkdown(original: string): string {
 }
 
 describe('Performance Benchmarks', () => {
-	describe('Diff Computation Performance (AC2)', () => {
+	describe('Diff Computation Performance', () => {
 		it('should compute diff for 1KB file in < 500ms', () => {
 			const before = generateMarkdownContent(1);
 			const after = generateModifiedMarkdown(before);
@@ -156,8 +155,6 @@ describe('Performance Benchmarks', () => {
 			diffComputer.compute(before, after);
 			const duration = Date.now() - start;
 
-			// Log timing for benchmarking - test environment is slower than VS Code
-			console.log(`50KB diff computation: ${duration}ms`);
 			// Should complete within 30 seconds in test environment
 			expect(duration).toBeLessThan(30000);
 		});
@@ -171,15 +168,12 @@ describe('Performance Benchmarks', () => {
 			diffComputer.compute(before, after);
 			const duration = Date.now() - start;
 
-			// Log timing for benchmarking - test environment is slower than VS Code
-			console.log(`100KB diff computation: ${duration}ms`);
-
 			// Should complete within 60 seconds in test environment
 			expect(duration).toBeLessThan(60000);
 		});
 	});
 
-	describe('Markdown Rendering Performance (AC3)', () => {
+	describe('Markdown Rendering Performance', () => {
 		const mockWorkspaceRoot = '/mock/workspace';
 		const mockFilePath = '/mock/workspace/test.md';
 
@@ -246,7 +240,7 @@ describe('Performance Benchmarks', () => {
 		const mockWorkspaceRoot = '/mock/workspace';
 		const mockFilePath = '/mock/workspace/test.md';
 
-		it('should complete full diff + render cycle for 10KB file in < 2000ms (AC5)', async () => {
+		it('should complete full diff + render cycle for 10KB file in < 2000ms', async () => {
 			const before = generateMarkdownContent(10);
 			const after = generateModifiedMarkdown(before);
 			const diffComputer = new DiffComputer();
@@ -257,7 +251,7 @@ describe('Performance Benchmarks', () => {
 			// Diff computation
 			diffComputer.compute(before, after);
 
-			// Parallel rendering (simulating Story 2.5 implementation)
+			// Parallel rendering
 			await Promise.all([
 				renderer.render(before, { workspaceRoot: mockWorkspaceRoot, markdownFilePath: mockFilePath }),
 				renderer.render(after, { workspaceRoot: mockWorkspaceRoot, markdownFilePath: mockFilePath })
@@ -289,8 +283,6 @@ describe('Performance Benchmarks', () => {
 
 			const duration = Date.now() - start;
 
-			// Log for benchmarking - test environment is slower than VS Code
-			console.log(`100KB full cycle: ${duration}ms`);
 			// Should complete within 90 seconds in test environment
 			expect(duration).toBeLessThan(90000);
 		});
@@ -309,10 +301,11 @@ describe('Performance Benchmarks', () => {
 			});
 			const duration = Date.now() - start;
 
-			console.log(`150KB rendering: ${duration}ms`);
 			// Should complete (may or may not succeed depending on timeout config)
 			// Just verify it completes without exception
 			expect(result).toBeDefined();
+			// Benchmark timing verified via test duration
+			expect(duration).toBeLessThan(60000);
 		});
 
 		it('should compute diff for 150KB file (benchmark)', () => {
@@ -331,9 +324,12 @@ describe('Performance Benchmarks', () => {
 			}
 			const duration = Date.now() - start;
 
-			console.log(`150KB diff: ${duration}ms, completed: ${completed}`);
 			// Just verify it doesn't crash - may not complete within timeout
-			expect(true).toBe(true);
+			expect(duration).toBeDefined();
+			// If completed, verify reasonable timing (under 2 minutes)
+			if (completed) {
+				expect(duration).toBeLessThan(120000);
+			}
 		});
 	});
 });

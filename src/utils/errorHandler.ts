@@ -1,10 +1,10 @@
 /**
  * Centralized error handling and user messaging
  *
- * Provides actionable error messages to users per FR53-FR59 (error handling).
- * Implements NFR-R1 (graceful error handling) and NFR-R3 (git failure recovery).
+ * Provides actionable error messages to users with graceful error handling
+ * and git failure recovery support.
  *
- * Story 5.3: Comprehensive Error Handling
+ * Key functions:
  * - showError(message, details?) - Show error to user and log
  * - showWarning(message, details?) - Show warning to user and log
  * - showInfo(message) - Show info to user
@@ -22,7 +22,7 @@ let outputChannel: vscode.OutputChannel | null = null;
 
 /**
  * Gets or creates the extension's output channel
- * Named "Markdown Preview Diff" per AC7
+ * Named "Markdown Preview Diff"
  */
 export function getOutputChannel(): vscode.OutputChannel {
 	if (!outputChannel) {
@@ -70,30 +70,24 @@ export function handleGitError(error: Error | GitError, context: string): void {
 /**
  * Converts GitError to user-friendly message with troubleshooting guidance
  *
- * Implements FR53, FR59, AC6 (actionable error messages with troubleshooting guidance).
- *
  * @param error - GitError to convert
  * @returns User-friendly error message with actionable guidance
  */
 function getUserFriendlyMessage(error: GitError): string {
 	switch (error.type) {
 		case GitErrorType.GitNotInstalled:
-			// AC6: "Git is not installed or not in PATH. Please install git and restart VS Code."
 			return 'Git is not installed or not in PATH. Please install git and restart VS Code.';
 
 		case GitErrorType.NotInRepository:
-			// AC1: "This file is not in a git repository. Preview Diff requires git version control."
 			return 'This file is not in a git repository. Preview Diff requires git version control.';
 
 		case GitErrorType.FileNotFound:
 			return `File not found: ${error.message}`;
 
 		case GitErrorType.PermissionDenied:
-			// AC6: "Permission denied accessing git repository. Check file permissions."
 			return 'Permission denied accessing git repository. Check file permissions.';
 
 		case GitErrorType.RepositoryCorrupted:
-			// AC6: "Git operation failed: repository may be corrupted. Try running 'git fsck' to diagnose."
 			return 'Git operation failed: repository may be corrupted. Try running \'git fsck\' to diagnose.';
 
 		case GitErrorType.InvalidPath:
@@ -101,7 +95,6 @@ function getUserFriendlyMessage(error: GitError): string {
 
 		case GitErrorType.Unknown:
 		default:
-			// AC6: Include original error message from git for debugging
 			return `Git operation failed: ${error.message}. Check the Output panel for more details.`;
 	}
 }
@@ -162,8 +155,6 @@ export function logError(message: string, error: Error): void {
 /**
  * Logs performance metric to output channel
  *
- * Implements NFR-O1 (performance logging) and Task 9 (performance monitoring).
- *
  * @param operation - Operation name (e.g., "gitRetrieval", "diffComputation")
  * @param durationMs - Duration in milliseconds
  */
@@ -174,8 +165,6 @@ export function logPerformance(operation: string, durationMs: number): void {
 
 /**
  * Logs performance warning when operation exceeds threshold
- *
- * Implements NFR-O1 (performance logging) and Task 9 (performance monitoring).
  *
  * @param operation - Operation name
  * @param durationMs - Duration in milliseconds
@@ -193,9 +182,7 @@ export function logPerformanceWarning(
 }
 
 /**
- * Shows an error message to the user and logs it to output channel
- *
- * Implements AC7: showError(message, details?) - Show error to user and log
+ * Shows an error message to the user and logs it to output channel.
  * All logged errors include timestamp, context, and details.
  *
  * @param message - User-friendly error message
@@ -220,9 +207,7 @@ export function showError(message: string, details?: string): void {
 }
 
 /**
- * Shows a warning message to the user and logs it to output channel
- *
- * Implements AC7: showWarning(message, details?) - Show warning to user and log
+ * Shows a warning message to the user and logs it to output channel.
  * All logged warnings include timestamp and context.
  *
  * @param message - User-friendly warning message
@@ -243,9 +228,7 @@ export function showWarning(message: string, details?: string): void {
 }
 
 /**
- * Shows an informational message to the user
- *
- * Implements AC7: showInfo(message) - Show info to user
+ * Shows an informational message to the user.
  * Info messages are shown to user but not logged (per typical info message behavior).
  *
  * @param message - Informational message
@@ -255,9 +238,7 @@ export function showInfo(message: string): void {
 }
 
 /**
- * Logs an error to the output channel without showing to user
- *
- * Implements AC7: logError(error, context) - Log error without showing to user
+ * Logs an error to the output channel without showing to user.
  * All logged errors include timestamp, context, and stack trace.
  *
  * @param error - Error object

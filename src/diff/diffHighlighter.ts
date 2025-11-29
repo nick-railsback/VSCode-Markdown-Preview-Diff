@@ -3,15 +3,13 @@
  *
  * This module injects <span> elements with diff classes into HTML to provide
  * visual change indicators (green for additions, red for removals) with word-level
- * granularity. It also tracks change locations for navigation (Epic 4).
+ * granularity. It also tracks change locations for navigation.
  *
  * Algorithm:
  * 1. Build text-to-DOM position map (strip HTML tags, track positions)
  * 2. For each Change: map text position to DOM position, inject span
  * 3. Track ChangeLocation for navigation
  * 4. Return HighlightedResult
- *
- * Note: Gutter markers (AC4) deferred to future enhancement - see AC4 deferral justification in story file
  */
 
 import { Change, HighlightedResult, ChangeLocation } from '../types/diff.types';
@@ -30,13 +28,12 @@ export class DiffHighlighter {
 	 * @param changes - Change array from DiffComputer
 	 * @returns HighlightedResult with spans injected and change locations tracked
 	 *
-	 * Implements AC1-AC15:
-	 * - AC1: Added content wrapped in span.diff-added (green)
-	 * - AC2: Removed content wrapped in span.diff-removed (red)
-	 * - AC3: Word-level granularity preserved
-	 * - AC4: Gutter markers (DEFERRED to future enhancement)
-	 * - AC13: ChangeLocation tracking
-	 * - AC15: Graceful degradation on errors
+	 * Highlights:
+	 * - Added content wrapped in span.diff-added (green)
+	 * - Removed content wrapped in span.diff-removed (red)
+	 * - Word-level granularity preserved
+	 * - ChangeLocation tracking for navigation
+	 * - Graceful degradation on errors
 	 */
 	public applyHighlights(
 		beforeHtml: string,
@@ -44,7 +41,7 @@ export class DiffHighlighter {
 		changes: Change[]
 	): HighlightedResult {
 		try {
-			// AC11: Handle empty changes case - return original HTML unchanged
+			// Handle empty changes case - return original HTML unchanged
 			if (!changes || changes.length === 0) {
 				return {
 					beforeHtml,
@@ -167,7 +164,7 @@ export class DiffHighlighter {
 			};
 
 		} catch (error) {
-			// AC15: Graceful degradation - if highlighting fails, return unhighlighted HTML
+			// Graceful degradation - if highlighting fails, return unhighlighted HTML
 			logError('Diff highlighting failed, displaying unhighlighted diff', error as Error);
 			return {
 				beforeHtml,

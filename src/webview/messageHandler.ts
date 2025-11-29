@@ -22,7 +22,7 @@ export class MessageHandler {
 	}
 
 	/**
-	 * Update configuration and notify webview (AC6)
+	 * Update configuration and notify webview
 	 * @param config - Partial config to update
 	 */
 	public updateConfig(config: Partial<WebviewConfig>): void {
@@ -36,7 +36,7 @@ export class MessageHandler {
 	}
 
 	/**
-	 * Update syncScroll setting and notify webview (AC3, AC4)
+	 * Update syncScroll setting and notify webview
 	 * @deprecated Use updateConfig instead
 	 */
 	public updateSyncScroll(enabled: boolean): void {

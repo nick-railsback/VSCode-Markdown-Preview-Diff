@@ -58,7 +58,7 @@ describe('prevChange command', () => {
 		vi.clearAllMocks();
 	});
 
-	describe('AC11: Commands Only Active When Panel Open', () => {
+	describe('Commands Only Active When Panel Open', () => {
 		it('should show message when no diff panel is open', async () => {
 			vi.mocked(WebviewManager.hasActivePanel).mockReturnValue(false);
 
@@ -79,7 +79,7 @@ describe('prevChange command', () => {
 		});
 	});
 
-	describe('AC12: Empty Changes Handling', () => {
+	describe('Empty Changes Handling', () => {
 		it('should show message when no changes to navigate', async () => {
 			const emptyNavigator = new ChangeNavigator([]);
 			vi.mocked(WebviewManager.hasActivePanel).mockReturnValue(true);
@@ -92,7 +92,7 @@ describe('prevChange command', () => {
 		});
 	});
 
-	describe('AC4: Navigate to Previous Change via Keyboard', () => {
+	describe('Navigate to Previous Change via Keyboard', () => {
 		it('should call goToPrevious() and send navigateToChange message', async () => {
 			vi.mocked(WebviewManager.hasActivePanel).mockReturnValue(true);
 			vi.mocked(WebviewManager.getChangeNavigator).mockReturnValue(mockChangeNavigator);
@@ -127,7 +127,7 @@ describe('prevChange command', () => {
 		});
 	});
 
-	describe('AC6: Navigation Wrapping at Beginning', () => {
+	describe('Navigation Wrapping at Beginning', () => {
 		it('should wrap to last change when at first change', async () => {
 			vi.mocked(WebviewManager.hasActivePanel).mockReturnValue(true);
 			vi.mocked(WebviewManager.getChangeNavigator).mockReturnValue(mockChangeNavigator);
